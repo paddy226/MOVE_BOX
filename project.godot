@@ -24,6 +24,15 @@ config/icon="res://assets/icon/return-s.png"
 GameState="*res://game_state.gd"
 AudioManager="*res://audio_manager.gd"
 
+[display]
+
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=360
+window/size/window_height_override=640
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
@@ -34,12 +43,3 @@ rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
-
-[display]
-
-window/size/viewport_width=720
-window/size/viewport_height=1280
-window/size/window_width_override=360
-window/size/window_height_override=640
-window/stretch/mode="canvas_items"
-window/handheld/orientation=1

@@ -11,8 +11,11 @@ func _ready() -> void:
 	flash_rect.modulate.a = 0.0 # 初始透明
 	step_label.text = "Steps: 0"
 	
-	# 顯示版本號 (動態建立以確保出現在右下角)
+	# 顯示版本號
 	_setup_version_label()
+	
+	# 新增：建立重新開始按鈕
+	_setup_restart_button()
 	
 	# 連接按鈕信號
 	var restart_btn = $VictoryPanel/VBoxContainer/RestartButton
@@ -52,8 +55,41 @@ func _setup_version_label() -> void:
 		version_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		version_label.add_theme_constant_override("outline_size", 4)
 	
-	version_label.text = GameState.version_number
+	version_label.text = GameState.version_number + " by " + GameState.author_name
 	version_label.move_to_front()
+
+func _setup_restart_button() -> void:
+	var hud = get_node_or_null("HUD")
+	if not hud: return
+	
+	var restart_btn = hud.get_node_or_null("ManualRestartButton")
+	if not restart_btn:
+		restart_btn = TextureButton.new()
+		restart_btn.name = "ManualRestartButton"
+		hud.add_child(restart_btn)
+		
+		# 載入圖示 (使用 White 2x 版本)
+		var icon_tex = load("res://assets/kenney_game-icons/PNG/White/2x/return.png")
+		restart_btn.texture_normal = icon_tex
+		
+		# 設定位置 (右上角，留一些邊距)
+		restart_btn.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 30)
+		
+		# 重要：向左生長，避免超出螢幕
+		restart_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		
+		# 調整大小
+		restart_btn.custom_minimum_size = Vector2(64, 64)
+		restart_btn.ignore_texture_size = true
+		restart_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+		
+		# 設定顏色調配
+		restart_btn.modulate = Color(1, 1, 1, 0.8)
+		
+		# 連接按下事件
+		restart_btn.pressed.connect(_on_restart_button_pressed)
+	
+	restart_btn.move_to_front()
 
 func _on_player_stepped(count: int) -> void:
 	step_label.text = "Steps: " + str(count)
@@ -72,6 +108,7 @@ func _on_level_cleared() -> void:
 	# get_tree().paused = true
 
 func _on_restart_button_pressed() -> void:
+	AudioManager.play("ui_click")
 	# 重啟關卡
 	# get_tree().paused = false
 	get_tree().reload_current_scene()

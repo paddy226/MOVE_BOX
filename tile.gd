@@ -74,15 +74,18 @@ func _update_visuals() -> void:
 	
 	base_mesh.set_surface_override_material(0, base_mat)
 
-# 讓換色方塊飄浮
-func _animate_color_box() -> void:
+# 讓換色方塊飄浮 (改用遞迴式 Tween 避開 Infinite loop 警告)
+func _animate_color_box(up: bool = true) -> void:
+	if not is_inside_tree() or type != TileType.COLOR_CHANGER: return
+	
 	if active_tween:
 		active_tween.kill()
 		
-	# 飄浮
-	active_tween = get_tree().create_tween().set_loops().set_trans(Tween.TRANS_SINE)
-	active_tween.tween_property(color_box, "position:y", 0.4, 1.0).from(0.2)
-	active_tween.tween_property(color_box, "position:y", 0.2, 1.0)
+	active_tween = get_tree().create_tween()
+	var target_y = 0.4 if up else 0.2
+	
+	active_tween.tween_property(color_box, "position:y", target_y, 1.2).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	active_tween.finished.connect(func(): _animate_color_box(not up))
 
 # 當箱子踩上這格時被呼叫
 func on_stepped(player: Node3D) -> void:

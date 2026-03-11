@@ -4,7 +4,7 @@ extends Node
 signal direction_changed(direction: Vector3)
 signal pinched(delta: float)
 signal camera_dragged(relative: Vector2)
-signal camera_reset_requested # 新增：鏡頭復位信號
+signal camera_reset_requested # 鏡頭復位信號
 
 var swipe_start_pos: Vector2 = Vector2.ZERO
 var min_swipe_distance: float = 50.0 
@@ -14,16 +14,22 @@ var current_direction: Vector3 = Vector3.ZERO # 當前按住的方向
 var touches: Dictionary = {}
 var last_pinch_distance: float = 0.0
 var last_pinch_center: Vector2 = Vector2.ZERO
+var is_multi_touch: bool = false # 多指操作鎖定
 
 # 雙指連點偵測
 var last_two_finger_tap_time: int = 0
 const DOUBLE_TAP_DELAY_MS: int = 350 # 350 毫秒內的連點判定為雙擊
 
 func _input(event: InputEvent) -> void:
-	# 處理多指觸控
+	# 處理多指觸控 (手機/Android)
 	if event is InputEventScreenTouch:
 		if event.is_pressed():
 			touches[event.index] = event.position
+			
+			# 如果偵測到兩指以上，立即鎖定單指滑動
+			if touches.size() >= 2:
+				is_multi_touch = true
+				
 			if touches.size() == 1:
 				swipe_start_pos = event.position
 			elif touches.size() == 2:
@@ -31,7 +37,7 @@ func _input(event: InputEvent) -> void:
 				var current_time = Time.get_ticks_msec()
 				if current_time - last_two_finger_tap_time < DOUBLE_TAP_DELAY_MS:
 					camera_reset_requested.emit()
-					last_two_finger_tap_time = 0 # 觸發後重置，避免三連點變兩次雙擊
+					last_two_finger_tap_time = 0
 				else:
 					last_two_finger_tap_time = current_time
 				
@@ -39,18 +45,20 @@ func _input(event: InputEvent) -> void:
 				last_pinch_center = (touches[0] + touches[1]) * 0.5
 		else:
 			touches.erase(event.index)
+			if touches.size() == 0:
+				# 全部放開才解除鎖定
+				is_multi_touch = false
+				current_direction = Vector3.ZERO
+				direction_changed.emit(current_direction)
+			
 			if touches.size() < 2:
 				last_pinch_distance = 0.0
 				last_pinch_center = Vector2.ZERO
-			
-			if touches.size() == 0:
-				current_direction = Vector3.ZERO
-				direction_changed.emit(current_direction)
 	
 	if event is InputEventScreenDrag:
 		touches[event.index] = event.position
 		
-		# 如果是雙指觸控
+		# 如果是雙指觸控 (控制鏡頭)
 		if touches.size() == 2:
 			var pos1 = touches[0]
 			var pos2 = touches[1]
@@ -69,20 +77,21 @@ func _input(event: InputEvent) -> void:
 				camera_dragged.emit(relative)
 			last_pinch_center = center
 			
-		# 如果是單指，處理方向
-		elif touches.size() == 1:
+		# 如果是單指，且未處於多指操作鎖定中，處理方向 (翻動箱子)
+		elif touches.size() == 1 and not is_multi_touch:
 			_calculate_swipe(event.position)
 
-	# 滑動偵測 (支援滑鼠點擊)
+	# 滑動偵測 (支援 PC 滑鼠點擊)
 	if event is InputEventMouseButton:
-		if event.is_pressed():
+		if event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
 			swipe_start_pos = event.position
-		else:
+		elif not event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT:
 			current_direction = Vector3.ZERO
 			direction_changed.emit(current_direction)
 	
 	if event is InputEventMouseMotion:
-		if event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+		# 只有左鍵按住且沒有多指觸控時才處理滑鼠滑動
+		if event.button_mask & MOUSE_BUTTON_MASK_LEFT and not is_multi_touch:
 			_calculate_swipe(event.position)
 
 func _calculate_swipe(end_pos: Vector2) -> void:
