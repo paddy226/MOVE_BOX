@@ -1,0 +1,60 @@
+[gd_scene load_steps=4 format=3 uid="uid_003"]
+
+[ext_resource type="Script" path="res://player.gd" id="1_script"]
+[ext_resource type="Script" path="res://swipe_detector.gd" id="2_swipe"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(1, 1, 1)
+
+[node name="Player" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="BoxMesh" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+
+[node name="FaceLabels" type="Node3D" parent="BoxMesh"]
+
+[node name="Label1" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.51, 0)
+double_sided = false
+text = "1"
+font_size = 128
+outline_size = 20
+
+[node name="Label6" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -0.51, 0)
+double_sided = false
+text = "6"
+font_size = 128
+outline_size = 20
+
+[node name="Label2" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -0.51)
+double_sided = false
+text = "2"
+font_size = 128
+outline_size = 20
+
+[node name="Label5" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.51)
+double_sided = false
+text = "5"
+font_size = 128
+outline_size = 20
+
+[node name="Label3" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.51, 0, 0)
+double_sided = false
+text = "3"
+font_size = 128
+outline_size = 20
+
+[node name="Label4" type="Label3D" parent="BoxMesh/FaceLabels"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.51, 0, 0)
+double_sided = false
+text = "4"
+font_size = 128
+outline_size = 20
+
+[node name="SwipeDetector" type="Node" parent="."]
+script = ExtResource("2_swipe")

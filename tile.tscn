@@ -1,0 +1,79 @@
+[gd_scene load_steps=8 format=3 uid="uid_006"]
+
+[ext_resource type="Script" path="res://tile.gd" id="1_tile_script"]
+[ext_resource type="Texture2D" id="2_checkmark" path="res://assets/kenney_game-icons/PNG/White/2x/checkmark.png"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_Tile"]
+size = Vector3(1, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Tile"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Border"]
+albedo_color = Color(0.4, 0.4, 0.4, 1)
+render_priority = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_ColorBox"]
+size = Vector3(0.7, 0.7, 0.7)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Transparent"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.5)
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="TorusMesh" id="TorusMesh_Ring"]
+inner_radius = 0.45
+outer_radius = 0.5
+rings = 32
+ring_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Effect"]
+transparency = 1
+blend_mode = 1
+shading_mode = 0
+albedo_color = Color(1, 0.9, 0.3, 1)
+emission_enabled = true
+emission = Color(1, 0.8, 0, 1)
+emission_energy_multiplier = 10.0
+render_priority = 10
+
+[node name="Tile" type="Node3D"]
+script = ExtResource("1_tile_script")
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.95, 0, 0, 0, 1, 0, 0, 0, 0.95, 0, -0.05, 0)
+mesh = SubResource("BoxMesh_Tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_Tile")
+
+[node name="Border" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8, 0, 0, 0, 1, 0, -0.06, 0)
+mesh = SubResource("BoxMesh_Tile")
+surface_material_override/0 = SubResource("StandardMaterial3D_Border")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.01, 0)
+visible = false
+text = "0"
+font_size = 128
+outline_size = 12
+
+[node name="ColorBox" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+visible = false
+mesh = SubResource("BoxMesh_ColorBox")
+surface_material_override/0 = SubResource("StandardMaterial3D_Transparent")
+
+[node name="Icon" type="Sprite3D" parent="."]
+transform = Transform3D(0.7, 0, 0, 0, -3.0598e-08, 0.7, 0, -0.7, -3.0598e-08, 0, 0.03, 0)
+visible = false
+texture = ExtResource("2_checkmark")
+modulate = Color(0, 0.8, 0, 1) # 預設為綠色
+
+[node name="GoalEffect" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+visible = false
+mesh = SubResource("TorusMesh_Ring")
+surface_material_override/0 = SubResource("StandardMaterial3D_Effect")
