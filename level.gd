@@ -82,11 +82,23 @@ func generate_grid() -> void:
 			"uses": -1
 		}
 
-	# 5. 生成所有地板
+	# 5. 定義孔洞/空地板座標 (3 個)
+	var hole_coords = []
+	var hole_count = 3
+	for i in range(hole_count):
+		if all_coords.is_empty(): break
+		hole_coords.append(all_coords.pop_front())
+
+	# 6. 生成地板
 	for x in range(start_x, start_x + grid_width):
 		for z in range(start_z, start_z + grid_height):
-			var tile = tile_scene.instantiate()
 			var pos = Vector2i(x, z)
+			
+			# 如果是孔洞座標，直接跳過不生成地板
+			if pos in hole_coords:
+				continue
+				
+			var tile = tile_scene.instantiate()
 			tile.grid_pos = pos
 			
 			if pos in special_tiles:

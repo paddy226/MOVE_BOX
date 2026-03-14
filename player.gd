@@ -121,7 +121,7 @@ func roll_box(dir: Vector3) -> void:
 	var level = get_parent().get_node_or_null("Level")
 	if level:
 		var tile = level.get_tile_at(next_pos)
-		if tile == null or tile.type == Tile.TileType.OBSTACLE:
+		if tile == null or tile.type == Tile.TileType.OBSTACLE or tile.type == Tile.TileType.HOLE:
 			if error_cooldown <= 0:
 				AudioManager.play("error")
 				error_cooldown = 0.5
