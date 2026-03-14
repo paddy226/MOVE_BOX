@@ -58,6 +58,17 @@ func _unhandled_input(event: InputEvent) -> void:
 			_rotate_camera_step(rot_dir * deg_to_rad(30))
 			return
 
+	# 鏡頭縮放 (鍵盤 + / - 鍵)
+	if event is InputEventKey and event.pressed:
+		var zoom_dir = 0.0
+		if event.keycode == KEY_EQUAL: zoom_dir = -1.0 # + 鍵 (與等號同鍵)，拉近
+		elif event.keycode == KEY_MINUS: zoom_dir = 1.0 # - 鍵，拉遠
+		
+		if zoom_dir != 0.0:
+			cam.position.z = clamp(cam.position.z + zoom_dir * zoom_speed * 2.0, min_zoom, max_zoom)
+			GameState.last_camera_distance = cam.position.z
+			return
+
 	# 鏡頭復位 (右鍵雙擊 或 鍵盤 R)
 	var is_r_pressed = event is InputEventKey and event.pressed and event.keycode == KEY_R
 	var is_right_double_click = event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.double_click
@@ -106,7 +117,7 @@ func _rotate_camera_step(angle_delta: float) -> void:
 func _reset_camera() -> void:
 	# 預設值 (對應 game_state.gd 的初始值)
 	var target_rotation = Vector3(-PI/3, 0, 0)
-	var target_distance = 7.0
+	var target_distance = 9.0
 	
 	# 建立動畫
 	var tween = get_tree().create_tween().set_parallel(true).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
