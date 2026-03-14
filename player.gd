@@ -1,5 +1,5 @@
 extends Node3D
-# player.gd - 優化手感：加入輸入緩衝區 (Input Buffering)
+# player.gd - 優化手感：加入持續翻滾與輸入緩衝
 
 @export var roll_speed: float = 0.2
 @export var grid_size: float = 1.0
@@ -8,7 +8,8 @@ var is_moving: bool = false
 var current_bottom_value: int = 6 
 var current_color: Color = Color.WHITE # 預設為白色
 var error_cooldown: float = 0.0 # 錯誤音效冷卻時間
-var buffered_input: Vector3 = Vector3.ZERO # 新增：輸入緩衝
+var buffered_input: Vector3 = Vector3.ZERO # 快速換向的緩衝
+var active_intent_dir: Vector3 = Vector3.ZERO # 當前按住的方向
 
 @onready var box_mesh: MeshInstance3D = $BoxMesh
 @onready var face_labels_container: Node3D = $BoxMesh/FaceLabels
@@ -21,34 +22,40 @@ func _ready() -> void:
 	_update_bottom_face()
 	
 	# 連接手勢偵測器
-	$SwipeDetector.direction_changed.connect(_on_swipe_direction_changed)
+	if has_node("SwipeDetector"):
+		$SwipeDetector.direction_changed.connect(_on_swipe_direction_changed)
 
 func _process(_delta: float) -> void:
 	if error_cooldown > 0:
 		error_cooldown -= _delta
 
 func _unhandled_input(event: InputEvent) -> void:
-	# 處理鍵盤按下的事件 (允許連續按住不放)
-	if event is InputEventKey and event.pressed:
-		var intent_dir = Vector3.ZERO
+	# 處理鍵盤按下的事件 (支援連續按住)
+	if event is InputEventKey:
+		var dir = Vector3.ZERO
 		match event.keycode:
-			KEY_W, KEY_UP: intent_dir = Vector3.FORWARD
-			KEY_S, KEY_DOWN: intent_dir = Vector3.BACK
-			KEY_A, KEY_LEFT: intent_dir = Vector3.LEFT
-			KEY_D, KEY_RIGHT: intent_dir = Vector3.RIGHT
+			KEY_W, KEY_UP: dir = Vector3.FORWARD
+			KEY_S, KEY_DOWN: dir = Vector3.BACK
+			KEY_A, KEY_LEFT: dir = Vector3.LEFT
+			KEY_D, KEY_RIGHT: dir = Vector3.RIGHT
 		
-		if intent_dir != Vector3.ZERO:
-			var world_dir = _get_camera_relative_dir(intent_dir)
-			
-			if is_moving:
-				buffered_input = world_dir # 移動中，存入緩衝
+		if dir != Vector3.ZERO:
+			if event.pressed:
+				if active_intent_dir != dir:
+					active_intent_dir = dir
+					if not is_moving:
+						roll_box(_get_camera_relative_dir(dir))
 			else:
-				roll_box(world_dir) # 靜止，直接移動
+				# 放開按鍵時，如果放開的是當前方向，則清除
+				if active_intent_dir == dir:
+					active_intent_dir = Vector3.ZERO
 
 func _on_swipe_direction_changed(intent_dir: Vector3) -> void:
+	# SwipeDetector 在放開時會傳入 Vector3.ZERO
+	active_intent_dir = intent_dir
 	if intent_dir == Vector3.ZERO: return
-	var world_dir = _get_camera_relative_dir(intent_dir)
 	
+	var world_dir = _get_camera_relative_dir(intent_dir)
 	if is_moving:
 		buffered_input = world_dir
 	else:
@@ -109,7 +116,7 @@ func flash() -> void:
 func roll_box(dir: Vector3) -> void:
 	if is_moving: return
 	
-	# 邊界檢查
+	# 邊界與障礙物檢查 (維持原本不允許跌落的設計)
 	var next_pos = Vector2i(round(global_position.x + dir.x * grid_size), round(global_position.z + dir.z * grid_size))
 	var level = get_parent().get_node_or_null("Level")
 	if level:
@@ -152,11 +159,15 @@ func roll_box(dir: Vector3) -> void:
 	
 	is_moving = false
 	
-	# 處理緩衝指令
+	# 處理連續翻滾
+	# 優先處理快速操作的緩衝
 	if buffered_input != Vector3.ZERO:
 		var next_dir = buffered_input
 		buffered_input = Vector3.ZERO
 		roll_box(next_dir)
+	# 其次檢查是否還按住方向
+	elif active_intent_dir != Vector3.ZERO:
+		roll_box(_get_camera_relative_dir(active_intent_dir))
 
 func _check_tile_effect() -> void:
 	var level = get_parent().get_node_or_null("Level")
