@@ -1,5 +1,5 @@
 extends Node3D
-# level.gd - 管理網格座標
+# level.gd - 支援 JSON 載入與隨機生成
 
 @export var tile_scene: PackedScene = preload("res://tile.tscn")
 @export var grid_width: int = 10
@@ -8,108 +8,174 @@ extends Node3D
 var tiles: Dictionary = {} 
 var total_goals: int = 0
 var completed_goals: int = 0
-
 var possible_colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.PURPLE]
 
 signal level_cleared
 
-func _ready() -> void:
-	# 設定隨機種子
-	randomize()
-	generate_grid()
+const LEVEL_DIR = "res://levels/"
 
-func generate_grid() -> void:
+func _ready() -> void:
+	randomize()
+	
+	# 根據模式決定載入邏輯
+	if GameState.current_mode == GameState.GameMode.CUSTOM and GameState.selected_level_path != "":
+		load_level(GameState.selected_level_path)
+	elif GameState.current_mode == GameState.GameMode.RANDOM:
+		generate_random_grid()
+	else:
+		# 編輯器模式或預設
+		generate_random_grid()
+
+# 核心邏輯：從 JSON 載入關卡
+func load_level(file_path: String) -> void:
+	var file = FileAccess.open(file_path, FileAccess.READ)
+	if not file:
+		print("無法讀取檔案: ", file_path)
+		generate_random_grid()
+		return
+		
+	var json_string = file.get_as_text()
+	var json = JSON.new()
+	var error = json.parse(json_string)
+	
+	if error != OK:
+		print("JSON 解析錯誤: ", json.get_error_message())
+		generate_random_grid()
+		return
+		
+	var data = json.get_data()
+	generate_from_data(data)
+
+# 根據解析後的資料生成地圖
+func generate_from_data(data: Dictionary) -> void:
+	# 1. 清除舊地圖
 	for child in get_children():
 		child.queue_free()
 	tiles.clear()
 	total_goals = 0
 	completed_goals = 0
 	
-	# 1. 建立所有可用座標列表 (確保 10x10 數量)
-	var all_coords = []
+	# 2. 讀取設定
+	var settings = data.get("settings", {})
+	grid_width = settings.get("grid_width", 10)
+	grid_height = settings.get("grid_height", 10)
+	
+	# 3. 處理特殊格資料
+	var special_tiles = {} # Vector2i -> {type, color, value, uses}
+	var hole_coords = []
+	
+	for tile_data in data.get("tiles", []):
+		var pos_data = tile_data.get("pos", {"x":0, "z":0})
+		var pos = Vector2i(int(pos_data.x), int(pos_data.z))
+		
+		var type_str = tile_data.get("type", "DEFAULT")
+		var type = Tile.TileType.DEFAULT
+		
+		# 字串轉 Enum
+		match type_str:
+			"COLOR_CHANGER": type = Tile.TileType.COLOR_CHANGER
+			"GOAL": type = Tile.TileType.GOAL
+			"OBSTACLE": type = Tile.TileType.OBSTACLE
+			"HOLE": 
+				hole_coords.append(pos)
+				continue # 孔洞不生成物件
+		
+		special_tiles[pos] = {
+			"type": type,
+			"color": Color.from_string(tile_data.get("color", "#FFFFFF"), Color.WHITE),
+			"value": int(tile_data.get("value", 0)),
+			"uses": int(tile_data.get("uses", -1))
+		}
+		
+		if type == Tile.TileType.GOAL:
+			total_goals += 1
+
+	# 4. 完整生成網格
 	var start_x = -grid_width / 2
 	var start_z = -grid_height / 2
 	
 	for x in range(start_x, start_x + grid_width):
 		for z in range(start_z, start_z + grid_height):
+			var pos = Vector2i(x, z)
+			if pos in hole_coords: continue
+			
+			var tile = tile_scene.instantiate()
+			tile.grid_pos = pos
+			
+			if pos in special_tiles:
+				var d = special_tiles[pos]
+				tile.type = d.type
+				tile.target_color = d.color
+				tile.target_value = d.value
+				tile.uses = d.uses
+			else:
+				tile.type = Tile.TileType.DEFAULT
+				
+			add_child(tile)
+			tile.position = Vector3(x, -0.5, z)
+			tile.name = "Tile_%d_%d" % [x, z]
+			tiles[pos] = tile
+	
+	print("關卡載入成功: ", data.get("metadata", {}).get("level_name", "未命名"))
+
+# 原有的隨機生成邏輯 (備援用)
+func generate_random_grid() -> void:
+	for child in get_children(): child.queue_free()
+	tiles.clear()
+	total_goals = 0
+	completed_goals = 0
+	
+	var all_coords = []
+	var start_x = -grid_width / 2
+	var start_z = -grid_height / 2
+	for x in range(start_x, start_x + grid_width):
+		for z in range(start_z, start_z + grid_height):
 			if x == 0 and z == 0: continue
 			all_coords.append(Vector2i(x, z))
-	
-	# 隨機打亂座標順序
 	all_coords.shuffle()
 	
-	# 2. 定義目標 (3 個)
 	var goal_count = 3
 	var required_colors = []
-	var special_tiles = {} # 座標 -> {type, color, value}
-	
+	var special_tiles = {}
 	for i in range(goal_count):
 		if all_coords.is_empty(): break
 		var pos = all_coords.pop_front()
 		var color = possible_colors.pick_random()
 		var value = randi_range(1, 6)
-		
-		special_tiles[pos] = {
-			"type": Tile.TileType.GOAL,
-			"color": color,
-			"value": value,
-			"uses": -1
-		}
-		if not color in required_colors:
-			required_colors.append(color)
+		special_tiles[pos] = {"type": Tile.TileType.GOAL, "color": color, "value": value, "uses": -1}
+		if not color in required_colors: required_colors.append(color)
 		total_goals += 1
 
-	# 3. 定義換色點 (根據目標顏色生成)
 	for color in required_colors:
 		if all_coords.is_empty(): break
 		var pos = all_coords.pop_front()
-		special_tiles[pos] = {
-			"type": Tile.TileType.COLOR_CHANGER,
-			"color": color,
-			"value": 0,
-			"uses": -1 # 無限次數
-		}
+		special_tiles[pos] = {"type": Tile.TileType.COLOR_CHANGER, "color": color, "value": 0, "uses": -1}
 
-	# 4. 定義障礙物 (3 個)
 	var obstacle_count = 3
 	for i in range(obstacle_count):
 		if all_coords.is_empty(): break
 		var pos = all_coords.pop_front()
-		special_tiles[pos] = {
-			"type": Tile.TileType.OBSTACLE,
-			"color": Color.BLACK,
-			"value": 0,
-			"uses": -1
-		}
+		special_tiles[pos] = {"type": Tile.TileType.OBSTACLE, "color": Color.BLACK, "value": 0, "uses": -1}
 
-	# 5. 定義孔洞/空地板座標 (3 個)
 	var hole_coords = []
-	var hole_count = 3
-	for i in range(hole_count):
+	for i in range(3):
 		if all_coords.is_empty(): break
 		hole_coords.append(all_coords.pop_front())
 
-	# 6. 生成地板
 	for x in range(start_x, start_x + grid_width):
 		for z in range(start_z, start_z + grid_height):
 			var pos = Vector2i(x, z)
-			
-			# 如果是孔洞座標，直接跳過不生成地板
-			if pos in hole_coords:
-				continue
-				
+			if pos in hole_coords: continue
 			var tile = tile_scene.instantiate()
 			tile.grid_pos = pos
-			
 			if pos in special_tiles:
-				var data = special_tiles[pos]
-				tile.type = data.type
-				tile.target_color = data.color
-				tile.target_value = data.value
-				tile.uses = data.uses
+				var d = special_tiles[pos]
+				tile.type = d.type
+				tile.target_color = d.color
+				tile.target_value = d.value
+				tile.uses = d.uses
 			else:
 				tile.type = Tile.TileType.DEFAULT
-			
 			add_child(tile)
 			tile.position = Vector3(x, -0.5, z)
 			tile.name = "Tile_%d_%d" % [x, z]
@@ -118,11 +184,8 @@ func generate_grid() -> void:
 func get_tile_at(grid_pos: Vector2i) -> Node3D:
 	return tiles.get(grid_pos, null)
 
-# 當某個格子達成目標時被呼叫
 func notify_goal_completed() -> void:
 	completed_goals += 1
-	print("目標進度: ", completed_goals, "/", total_goals)
 	if completed_goals >= total_goals:
-		print("!!! 關卡完成 !!!")
 		AudioManager.play("win")
 		level_cleared.emit()
