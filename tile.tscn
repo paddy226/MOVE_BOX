@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid_006"]
+[gd_scene load_steps=9 format=3 uid="uid_006"]
 
 [ext_resource type="Script" path="res://tile.gd" id="1_tile_script"]
 [ext_resource type="Texture2D" id="2_checkmark" path="res://assets/kenney_game-icons/PNG/White/2x/checkmark.png"]
@@ -40,8 +40,15 @@ emission = Color(1, 0.8, 0, 1)
 emission_energy_multiplier = 10.0
 render_priority = 10
 
-[node name="Tile" type="Node3D"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_Tile"]
+size = Vector3(1, 0.1, 1)
+
+[node name="Tile" type="StaticBody3D"]
 script = ExtResource("1_tile_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+shape = SubResource("BoxShape3D_Tile")
 
 [node name="Base" type="MeshInstance3D" parent="."]
 transform = Transform3D(0.95, 0, 0, 0, 1, 0, 0, 0, 0.95, 0, -0.05, 0)

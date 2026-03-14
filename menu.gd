@@ -24,6 +24,5 @@ func _on_custom_pressed() -> void:
 
 func _on_editor_pressed() -> void:
 	AudioManager.play("ui_click")
-	print("編輯器功能開發中...")
-	# GameState.current_mode = GameState.GameMode.EDITOR
-	# get_tree().change_scene_to_file("res://editor.tscn")
+	GameState.current_mode = GameState.GameMode.EDITOR
+	get_tree().change_scene_to_file("res://editor.tscn")

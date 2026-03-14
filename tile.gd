@@ -1,6 +1,6 @@
 extends Node3D
 class_name Tile
-# tile.gd - 視覺強化：修正目標點顯示邏輯與閃爍問題
+# tile.gd - 視覺強化：增加安全性檢查與 HOLE 徹底隱藏
 
 enum TileType { DEFAULT, COLOR_CHANGER, GOAL, OBSTACLE, HOLE }
 
@@ -15,17 +15,35 @@ var active_tween: Tween
 
 @onready var label: Label3D = $Label3D
 @onready var base_mesh: MeshInstance3D = $Base
+@onready var border_mesh: MeshInstance3D = $Border
 @onready var color_box: MeshInstance3D = $ColorBox
 @onready var icon: Sprite3D = $Icon
+
+signal clicked(tile: Tile)
 
 func _ready() -> void:
 	_update_visuals()
 	if type == TileType.COLOR_CHANGER:
 		_animate_color_box()
 
+var _mouse_down_pos: Vector2 = Vector2.ZERO
+
+# 處理滑鼠點擊 (需要 StaticBody3D)
+func _input_event(_camera: Camera3D, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_mouse_down_pos = event.position
+		else:
+			# 放開時檢查位移，如果位移很小 (小於 5 像素)，視為點擊
+			if event.position.distance_to(_mouse_down_pos) < 5.0:
+				clicked.emit(self)
+
 # 更新格子的視覺顯示
 func _update_visuals() -> void:
 	if not is_inside_tree(): return
+	
+	# 取得節點 (加入安全檢查)
+	var goal_eff = get_node_or_null("GoalEffect")
 	
 	# 初始化或獲取地板材質
 	var base_mat = base_mesh.get_surface_override_material(0)
@@ -33,6 +51,9 @@ func _update_visuals() -> void:
 	
 	# 基礎重置
 	base_mesh.visible = true
+	border_mesh.visible = true
+	if goal_eff: goal_eff.visible = false
+	
 	base_mesh.scale.y = 1.0
 	base_mesh.position.y = 0.0
 	base_mat.transparency = StandardMaterial3D.TRANSPARENCY_DISABLED
@@ -43,8 +64,8 @@ func _update_visuals() -> void:
 		# 目標已達成狀態
 		label.visible = false
 		icon.visible = true
-		icon.position.y = 0.1 # 確保在地面上方
-		base_mat.albedo_color = Color(0.25, 0.25, 0.25) # 變成暗灰色
+		icon.position.y = 0.1
+		base_mat.albedo_color = Color(0.25, 0.25, 0.25)
 	else:
 		# 一般狀態
 		icon.visible = false
@@ -58,16 +79,13 @@ func _update_visuals() -> void:
 			TileType.COLOR_CHANGER:
 				color_box.visible = true
 				base_mat.albedo_color = Color(0.2, 0.2, 0.2)
-				
 				var box_mat = color_box.get_surface_override_material(0).duplicate()
 				var transparent_color = target_color
 				transparent_color.a = 0.5
 				box_mat.albedo_color = transparent_color
 				box_mat.emission = target_color
 				color_box.set_surface_override_material(0, box_mat)
-				
-				if uses < 0:
-					label.visible = false
+				if uses < 0: label.visible = false
 				else:
 					label.visible = true
 					label.text = str(uses)
@@ -78,7 +96,7 @@ func _update_visuals() -> void:
 				color_box.visible = false
 				base_mat.albedo_color = target_color
 				label.text = str(target_value)
-				label.position.y = 0.1 # 提高位置防止閃爍
+				label.position.y = 0.1
 				
 			TileType.OBSTACLE:
 				label.visible = false
@@ -93,6 +111,7 @@ func _update_visuals() -> void:
 				color_box.visible = false
 				icon.visible = false
 				base_mesh.visible = false
+				border_mesh.visible = false
 	
 	base_mesh.set_surface_override_material(0, base_mat)
 
@@ -108,7 +127,6 @@ func _animate_color_box(up: bool = true) -> void:
 # 當箱子踩上這格時被呼叫
 func on_stepped(player: Node3D) -> void:
 	if not is_active: return
-	
 	match type:
 		TileType.COLOR_CHANGER:
 			if player.current_color == target_color: return
@@ -125,28 +143,18 @@ func on_stepped(player: Node3D) -> void:
 
 func _complete_goal() -> void:
 	is_active = false
-	
-	# 先更新視覺 (這會隱藏數字並顯示打勾，地板變灰)
 	_update_visuals()
-
-	# 額外的高能閃爍效果
 	var mat = base_mesh.get_surface_override_material(0)
 	mat.emission_enabled = true
 	mat.emission = Color(1.0, 0.9, 0.5) 
 	mat.emission_energy_multiplier = 2.5
-	
 	var flash_tween = get_tree().create_tween()
 	flash_tween.tween_property(mat, "emission_energy_multiplier", 0.0, 0.6).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	flash_tween.chain().tween_callback(func(): mat.emission_enabled = false)
-
 	AudioManager.play("goal")
-	
 	var player = get_tree().current_scene.get_node_or_null("Player")
-	if player and player.has_method("flash"):
-		player.flash()
-
-	if get_parent().has_method("notify_goal_completed"):
-		get_parent().notify_goal_completed()
+	if player and player.has_method("flash"): player.flash()
+	if get_parent().has_method("notify_goal_completed"): get_parent().notify_goal_completed()
 
 func _become_default() -> void:
 	if active_tween: active_tween.kill()

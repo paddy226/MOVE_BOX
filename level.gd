@@ -9,6 +9,7 @@ var tiles: Dictionary = {}
 var total_goals: int = 0
 var completed_goals: int = 0
 var possible_colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.PURPLE]
+var player_start_grid_pos: Vector2i = Vector2i(0, 0) # 方塊初始位置
 
 signal level_cleared
 
@@ -25,6 +26,17 @@ func _ready() -> void:
 	else:
 		# 編輯器模式或預設
 		generate_random_grid()
+	
+	# 初始化玩家位置
+	call_deferred("_initialize_player_position")
+
+func _initialize_player_position() -> void:
+	var player = get_parent().get_node_or_null("Player")
+	if player:
+		player.global_position = Vector3(player_start_grid_pos.x, 0, player_start_grid_pos.y)
+		if player.has_method("_snap_to_grid"):
+			player._snap_to_grid()
+		print("玩家已初始化於起點: ", player_start_grid_pos)
 
 # 核心邏輯：從 JSON 載入關卡
 func load_level(file_path: String) -> void:
@@ -60,6 +72,9 @@ func generate_from_data(data: Dictionary) -> void:
 	grid_width = settings.get("grid_width", 10)
 	grid_height = settings.get("grid_height", 10)
 	
+	var start_pos_data = settings.get("start_pos", {"x": 0, "z": 0})
+	player_start_grid_pos = Vector2i(int(start_pos_data.x), int(start_pos_data.z))
+	
 	# 3. 處理特殊格資料
 	var special_tiles = {} # Vector2i -> {type, color, value, uses}
 	var hole_coords = []
@@ -71,14 +86,13 @@ func generate_from_data(data: Dictionary) -> void:
 		var type_str = tile_data.get("type", "DEFAULT")
 		var type = Tile.TileType.DEFAULT
 		
-		# 字串轉 Enum
 		match type_str:
 			"COLOR_CHANGER": type = Tile.TileType.COLOR_CHANGER
 			"GOAL": type = Tile.TileType.GOAL
 			"OBSTACLE": type = Tile.TileType.OBSTACLE
 			"HOLE": 
 				hole_coords.append(pos)
-				continue # 孔洞不生成物件
+				continue
 		
 		special_tiles[pos] = {
 			"type": type,
@@ -118,12 +132,36 @@ func generate_from_data(data: Dictionary) -> void:
 	
 	print("關卡載入成功: ", data.get("metadata", {}).get("level_name", "未命名"))
 
-# 原有的隨機生成邏輯 (備援用)
+# 生成一個全滿的預設地圖 (供編輯器使用)
+func generate_empty_grid() -> void:
+	for child in get_children(): child.queue_free()
+	tiles.clear()
+	total_goals = 0
+	completed_goals = 0
+	player_start_grid_pos = Vector2i(0, 0)
+	
+	var start_x = -grid_width / 2
+	var start_z = -grid_height / 2
+	
+	for x in range(start_x, start_x + grid_width):
+		for z in range(start_z, start_z + grid_height):
+			var tile = tile_scene.instantiate()
+			var pos = Vector2i(x, z)
+			tile.grid_pos = pos
+			tile.type = Tile.TileType.DEFAULT
+			
+			add_child(tile)
+			tile.position = Vector3(x, -0.5, z)
+			tile.name = "Tile_%d_%d" % [x, z]
+			tiles[pos] = tile
+
+# 原有的隨機生成邏輯
 func generate_random_grid() -> void:
 	for child in get_children(): child.queue_free()
 	tiles.clear()
 	total_goals = 0
 	completed_goals = 0
+	player_start_grid_pos = Vector2i(0, 0)
 	
 	var all_coords = []
 	var start_x = -grid_width / 2

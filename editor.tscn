@@ -1,0 +1,95 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://editor.gd" id="1_editor_script"]
+[ext_resource type="Script" path="res://level.gd" id="2_level_script"]
+[ext_resource type="Script" path="res://camera_controller.gd" id="3_camera_script"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png" id="4_back_icon"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_Ghost"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Ghost"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.4)
+emission_enabled = true
+emission = Color(1, 1, 1, 1)
+emission_energy_multiplier = 0.5
+
+[node name="Editor" type="Node3D"]
+script = ExtResource("1_editor_script")
+
+[node name="Level" type="Node3D" parent="."]
+script = ExtResource("2_level_script")
+
+[node name="GhostPlayer" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+mesh = SubResource("BoxMesh_Ghost")
+surface_material_override/0 = SubResource("StandardMaterial3D_Ghost")
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 0.5, 0)
+script = ExtResource("3_camera_script")
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, 0.75, -0.433, 0, 5, 0)
+shadow_enabled = true
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="HUD" type="Control" parent="CanvasLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ToolLabel" type="Label" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 40.0
+offset_right = 200.0
+offset_bottom = 90.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 32
+text = "當前工具: DEFAULT (地板)"
+horizontal_alignment = 1
+
+[node name="BackButton" type="TextureButton" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -94.0
+offset_right = 94.0
+offset_bottom = -30.0
+grow_vertical = 0
+texture_normal = ExtResource("4_back_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.8)
+
+[node name="HelpLabel" type="Label" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -320.0
+offset_top = 110.0
+offset_right = -20.0
+offset_bottom = 210.0
+grow_horizontal = 0
+text = "按 Tab 切換工具
+按 1-5 快速切換
+按 B 設定方塊起點
+WASD / 方向鍵 移動地圖
+點擊地板修改"
+horizontal_alignment = 2
