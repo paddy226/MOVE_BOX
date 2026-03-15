@@ -1,8 +1,8 @@
 {
 	"metadata": {
 		"author": "Paddyliu",
-		"date": "2026-03-15T22:02:30",
-		"level_name": "Editor Preview"
+		"date": "2026-03-15T22:04:41",
+		"level_name": "level_17735"
 	},
 	"settings": {
 		"grid_height": 10,
@@ -17,7 +17,7 @@
 			"color": "ff0000ff",
 			"pos": {
 				"x": -2,
-				"z": 3
+				"z": 2
 			},
 			"type": "GOAL",
 			"uses": -1,
@@ -27,7 +27,7 @@
 			"color": "ff0000ff",
 			"pos": {
 				"x": 2,
-				"z": 3
+				"z": 2
 			},
 			"type": "COLOR_CHANGER",
 			"uses": -1,

@@ -53,13 +53,13 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -200.0
+offset_left = -300.0
 offset_top = 40.0
-offset_right = 200.0
+offset_right = 300.0
 offset_bottom = 90.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 32
-text = "當前工具: DEFAULT (地板)"
+theme_override_font_sizes/font_size = 40
+text = "Tool: TILE"
 horizontal_alignment = 1
 
 [node name="BackButton" type="TextureButton" parent="CanvasLayer/HUD"]
@@ -77,6 +77,19 @@ ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(1, 1, 1, 0.8)
 
+[node name="ClearButton" type="Button" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -200.0
+offset_right = 180.0
+offset_bottom = -130.0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+text = "CLEAR"
+
 [node name="SaveButton" type="Button" parent="CanvasLayer/HUD"]
 layout_mode = 1
 anchors_preset = 3
@@ -93,21 +106,54 @@ grow_vertical = 0
 theme_override_font_sizes/font_size = 32
 text = "SAVE"
 
+[node name="LoadButton" type="Button" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -340.0
+offset_top = -100.0
+offset_right = -190.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+text = "LOAD"
+
+[node name="PlayButton" type="Button" parent="CanvasLayer/HUD"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -500.0
+offset_top = -100.0
+offset_right = -350.0
+offset_bottom = -30.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 32
+text = "PLAY"
+
 [node name="HelpLabel" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -320.0
+offset_left = -400.0
 offset_top = 110.0
 offset_right = -20.0
-offset_bottom = 210.0
+offset_bottom = 310.0
 grow_horizontal = 0
-text = "按 Tab 切換工具
-按 1-5 快速切換
-按 B 設定方塊起點
-WASD / 方向鍵 移動地圖
-點擊方塊開啟設定"
+theme_override_font_sizes/font_size = 24
+text = "Tab: Cycle Tools
+1-5: Shortcuts
+B: Set Start Pos
+WASD / Drag: Move
+Click: Edit / Settings"
 horizontal_alignment = 2
 
 [node name="PropertyPopup" type="Panel" parent="CanvasLayer"]
@@ -117,10 +163,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -200.0
-offset_right = 250.0
-offset_bottom = 200.0
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -129,39 +175,42 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = -20.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 25
 
 [node name="Title" type="Label" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "方塊設定"
+theme_override_font_sizes/font_size = 36
+text = "TILE SETTINGS"
 horizontal_alignment = 1
 
 [node name="ColorLabel" type="Label" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
 layout_mode = 2
-text = "選擇顏色:"
+theme_override_font_sizes/font_size = 28
+text = "Select Color:"
 
 [node name="ColorButtons" type="HBoxContainer" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 15
 alignment = 1
 
 [node name="ValueSection" type="VBoxContainer" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="ValueLabel" type="Label" parent="CanvasLayer/PropertyPopup/VBoxContainer/ValueSection"]
 layout_mode = 2
-text = "設定數值 (1-6):"
+theme_override_font_sizes/font_size = 28
+text = "Set Value (1-6):"
 
 [node name="ValueButtons" type="HBoxContainer" parent="CanvasLayer/PropertyPopup/VBoxContainer/ValueSection"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 10
 alignment = 1
 
 [node name="Spacer" type="Control" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
@@ -169,6 +218,174 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="CloseButton" type="Button" parent="CanvasLayer/PropertyPopup/VBoxContainer"]
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
-text = "確定"
+theme_override_font_sizes/font_size = 32
+text = "OK"
+
+[node name="SavePopup" type="Panel" parent="CanvasLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -150.0
+offset_right = 300.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/SavePopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Label" type="Label" parent="CanvasLayer/SavePopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Enter Level Name:"
+horizontal_alignment = 1
+
+[node name="FileNameEdit" type="LineEdit" parent="CanvasLayer/SavePopup/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+placeholder_text = "level_01"
+alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/SavePopup/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="ConfirmSave" type="Button" parent="CanvasLayer/SavePopup/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(180, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "SAVE"
+
+[node name="CancelSave" type="Button" parent="CanvasLayer/SavePopup/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(180, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "CANCEL"
+
+[node name="LoadPopup" type="Panel" parent="CanvasLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -320.0
+offset_top = -450.0
+offset_right = 320.0
+offset_bottom = 450.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/LoadPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Label" type="Label" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "LOAD LEVEL"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="List" type="VBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="CloseLoad" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "CANCEL"
+
+[node name="DeletePopup" type="Panel" parent="CanvasLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/DeletePopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Msg" type="Label" parent="CanvasLayer/DeletePopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Delete Level?"
+horizontal_alignment = 1
+
+[node name="LevelName" type="Label" parent="CanvasLayer/DeletePopup/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 28
+text = "Name"
+horizontal_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/DeletePopup/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="ConfirmDel" type="Button" parent="CanvasLayer/DeletePopup/VBoxContainer/HBox"]
+custom_minimum_size = Vector2(150, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "YES"
+
+[node name="CancelDel" type="Button" parent="CanvasLayer/DeletePopup/VBoxContainer/HBox"]
+custom_minimum_size = Vector2(150, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "NO"

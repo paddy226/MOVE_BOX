@@ -17,10 +17,7 @@ func _on_random_pressed() -> void:
 
 func _on_custom_pressed() -> void:
 	AudioManager.play("ui_click")
-	# 目前先預設載入 test_level.json
-	GameState.current_mode = GameState.GameMode.CUSTOM
-	GameState.selected_level_path = "res://levels/test_level.json"
-	get_tree().change_scene_to_file("res://main.tscn")
+	get_tree().change_scene_to_file("res://level_select.tscn")
 
 func _on_editor_pressed() -> void:
 	AudioManager.play("ui_click")

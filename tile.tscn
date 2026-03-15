@@ -1,7 +1,7 @@
-[gd_scene load_steps=9 format=3 uid="uid_006"]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://tile.gd" id="1_tile_script"]
-[ext_resource type="Texture2D" id="2_checkmark" path="res://assets/kenney_game-icons/PNG/White/2x/checkmark.png"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/checkmark.png" id="2_checkmark"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Tile"]
 size = Vector3(1, 0.1, 1)
@@ -24,24 +24,18 @@ emission_enabled = true
 emission = Color(1, 1, 1, 1)
 emission_energy_multiplier = 0.5
 
-[sub_resource type="TorusMesh" id="TorusMesh_Ring"]
-inner_radius = 0.45
-outer_radius = 0.5
-rings = 32
-ring_segments = 16
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Effect"]
-transparency = 1
-blend_mode = 1
-shading_mode = 0
-albedo_color = Color(1, 0.9, 0.3, 1)
-emission_enabled = true
-emission = Color(1, 0.8, 0, 1)
-emission_energy_multiplier = 10.0
-render_priority = 10
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_Tile"]
 size = Vector3(1, 0.1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Hole"]
+size = Vector3(0.9, 0.02, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Hole"]
+transparency = 1
+albedo_color = Color(1, 0, 0, 0.3)
+emission_enabled = true
+emission = Color(1, 0, 0, 1)
+emission_energy_multiplier = 0.5
 
 [node name="Tile" type="StaticBody3D"]
 script = ExtResource("1_tile_script")
@@ -77,10 +71,10 @@ surface_material_override/0 = SubResource("StandardMaterial3D_Transparent")
 transform = Transform3D(0.7, 0, 0, 0, -3.0598e-08, 0.7, 0, -0.7, -3.0598e-08, 0, 0.03, 0)
 visible = false
 texture = ExtResource("2_checkmark")
-modulate = Color(0, 0.8, 0, 1) # 預設為綠色
+modulate = Color(0, 0.8, 0, 1)
 
-[node name="GoalEffect" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+[node name="HolePreview" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.09, 0)
 visible = false
-mesh = SubResource("TorusMesh_Ring")
-surface_material_override/0 = SubResource("StandardMaterial3D_Effect")
+mesh = SubResource("BoxMesh_Hole")
+surface_material_override/0 = SubResource("StandardMaterial3D_Hole")

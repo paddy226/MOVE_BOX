@@ -104,8 +104,11 @@ func _setup_back_button() -> void:
 
 func _on_back_button_pressed() -> void:
 	AudioManager.play("ui_click")
-	# 返回起始頁面
-	get_tree().change_scene_to_file("res://menu.tscn")
+	# 智慧導向：如果是預覽模式，回編輯器；否則回選單
+	if GameState.is_preview_mode:
+		get_tree().change_scene_to_file("res://editor.tscn")
+	else:
+		get_tree().change_scene_to_file("res://menu.tscn")
 
 func _on_player_stepped(count: int) -> void:
 	step_label.text = "Steps: " + str(count)

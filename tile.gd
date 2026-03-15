@@ -1,6 +1,6 @@
 extends Node3D
 class_name Tile
-# tile.gd - 視覺強化：增加安全性檢查與 HOLE 徹底隱藏
+# tile.gd - 視覺強化：支援編輯器專用孔洞預覽
 
 enum TileType { DEFAULT, COLOR_CHANGER, GOAL, OBSTACLE, HOLE }
 
@@ -35,7 +35,6 @@ func _input_event(_camera: Camera3D, event: InputEvent, _position: Vector3, _nor
 		if event.pressed:
 			_mouse_down_pos = event.position
 		else:
-			# 放開時檢查位移
 			if event.position.distance_to(_mouse_down_pos) < 5.0:
 				if event.button_index == MOUSE_BUTTON_LEFT:
 					clicked.emit(self)
@@ -46,8 +45,9 @@ func _input_event(_camera: Camera3D, event: InputEvent, _position: Vector3, _nor
 func _update_visuals() -> void:
 	if not is_inside_tree(): return
 	
-	# 取得節點 (加入安全檢查)
+	# 取得節點
 	var goal_eff = get_node_or_null("GoalEffect")
+	var hole_pre = get_node_or_null("HolePreview")
 	
 	# 初始化或獲取地板材質
 	var base_mat = base_mesh.get_surface_override_material(0)
@@ -57,6 +57,7 @@ func _update_visuals() -> void:
 	base_mesh.visible = true
 	border_mesh.visible = true
 	if goal_eff: goal_eff.visible = false
+	if hole_pre: hole_pre.visible = false
 	
 	base_mesh.scale.y = 1.0
 	base_mesh.position.y = 0.0
@@ -65,15 +66,12 @@ func _update_visuals() -> void:
 	
 	# 根據狀態決定 Icon 與 Label 的顯示
 	if type == TileType.GOAL and not is_active:
-		# 目標已達成狀態
 		label.visible = false
 		icon.visible = true
 		icon.position.y = 0.1
 		base_mat.albedo_color = Color(0.25, 0.25, 0.25)
 	else:
-		# 一般狀態
 		icon.visible = false
-		
 		match type:
 			TileType.DEFAULT:
 				label.visible = false
@@ -116,6 +114,9 @@ func _update_visuals() -> void:
 				icon.visible = false
 				base_mesh.visible = false
 				border_mesh.visible = false
+				# 編輯器模式下顯示紅色預覽片
+				if GameState.current_mode == GameState.GameMode.EDITOR:
+					if hole_pre: hole_pre.visible = true
 	
 	base_mesh.set_surface_override_material(0, base_mat)
 

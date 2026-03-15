@@ -26,12 +26,14 @@ func _ready() -> void:
 	randomize()
 	
 	# 根據模式決定載入邏輯
-	if GameState.current_mode == GameState.GameMode.CUSTOM and GameState.selected_level_path != "":
+	if not GameState.preview_level_data.is_empty():
+		# 載入預覽資料，但不在此處清除，讓編輯器也能讀取
+		generate_from_data(GameState.preview_level_data)
+	elif GameState.current_mode == GameState.GameMode.CUSTOM and GameState.selected_level_path != "":
 		load_level(GameState.selected_level_path)
 	elif GameState.current_mode == GameState.GameMode.RANDOM:
 		generate_random_grid()
 	else:
-		# 編輯器模式或預設
 		generate_random_grid()
 	
 	# 初始化玩家位置
@@ -98,8 +100,13 @@ func generate_from_data(data: Dictionary) -> void:
 			"GOAL": type = Tile.TileType.GOAL
 			"OBSTACLE": type = Tile.TileType.OBSTACLE
 			"HOLE": 
-				hole_coords.append(pos)
-				continue
+				# 關鍵：如果是編輯器模式，我們需要方塊來顯示紅色預覽並接收點擊
+				if GameState.current_mode == GameState.GameMode.EDITOR:
+					type = Tile.TileType.HOLE
+				else:
+					# 正式遊戲模式，完全不生成物件
+					hole_coords.append(pos)
+					continue
 		
 		special_tiles[pos] = {
 			"type": type,
