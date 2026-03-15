@@ -1,5 +1,5 @@
 extends Node3D
-# editor.gd - 支援完整自訂流程、載入、清除與刪除確認的編輯器
+# editor.gd - 支援完整自訂流程、載入、清除、刪除確認與關卡合法性檢查的編輯器
 
 @onready var level = $Level
 @onready var tool_label = $CanvasLayer/HUD/ToolLabel
@@ -11,6 +11,9 @@ extends Node3D
 @onready var save_popup = $CanvasLayer/SavePopup
 @onready var load_popup = $CanvasLayer/LoadPopup
 @onready var del_popup = $CanvasLayer/DeletePopup
+@onready var alert_popup = $CanvasLayer/AlertPopup
+@onready var alert_label = $CanvasLayer/AlertPopup/VBoxContainer/Msg
+
 @onready var load_list = $CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer/List
 @onready var file_name_edit = $CanvasLayer/SavePopup/VBoxContainer/FileNameEdit
 @onready var del_label = $CanvasLayer/DeletePopup/VBoxContainer/LevelName
@@ -61,6 +64,68 @@ func _ready() -> void:
 	$CanvasLayer/LoadPopup/VBoxContainer/CloseLoad.pressed.connect(func(): load_popup.visible = false)
 	$CanvasLayer/DeletePopup/VBoxContainer/HBox/ConfirmDel.pressed.connect(_on_confirm_delete)
 	$CanvasLayer/DeletePopup/VBoxContainer/HBox/CancelDel.pressed.connect(func(): del_popup.visible = false)
+	$CanvasLayer/AlertPopup/VBoxContainer/CloseAlert.pressed.connect(func(): alert_popup.visible = false)
+
+# 核心邏輯：關卡合法性檢查 (含 BFS 尋路)
+func _validate_level() -> String:
+	var goals = []
+	var changers = []
+	var start_tile = null
+	
+	# 1. 基礎收集
+	for pos in level.tiles:
+		var tile = level.tiles[pos]
+		if tile.type == Tile.TileType.GOAL: goals.append(tile)
+		elif tile.type == Tile.TileType.COLOR_CHANGER: changers.append(tile)
+		if tile.grid_pos == level.player_start_grid_pos: start_tile = tile
+	
+	if goals.is_empty():
+		return "Missing GOAL! You need at least one target to finish the level."
+	
+	if start_tile == null or start_tile.type == Tile.TileType.HOLE or start_tile.type == Tile.TileType.OBSTACLE:
+		return "Invalid START POS! The player cannot start on a wall or a hole."
+
+	# 2. BFS 尋路分析
+	var reachable_coords = []
+	var queue = [level.player_start_grid_pos]
+	var visited = {level.player_start_grid_pos: true}
+	
+	while not queue.is_empty():
+		var current = queue.pop_front()
+		reachable_coords.append(current)
+		
+		# 檢查四個鄰居
+		for offset in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var neighbor = current + offset
+			if neighbor in level.tiles and not neighbor in visited:
+				var t = level.tiles[neighbor]
+				# 只有非牆壁、非孔洞的格子可以通行
+				if t.type != Tile.TileType.OBSTACLE and t.type != Tile.TileType.HOLE:
+					visited[neighbor] = true
+					queue.push_back(neighbor)
+	
+	# 3. 驗證所有 GOAL 是否可達
+	for g in goals:
+		if not g.grid_pos in reachable_coords:
+			return "Unreachable GOAL! One of your targets is isolated by walls or holes."
+			
+	# 4. 顏色配套與可達性檢查
+	var required_colors = []
+	for g in goals:
+		if g.target_color != Color.WHITE and not g.target_color in required_colors:
+			required_colors.append(g.target_color)
+			
+	for req in required_colors:
+		var color_found_and_reachable = false
+		for c in changers:
+			if c.target_color == req and c.grid_pos in reachable_coords:
+				color_found_and_reachable = true
+				break
+		
+		if not color_found_and_reachable:
+			return "Unreachable or Missing CHANGER! You need a reachable [" + _get_color_name(req) + "] changer to complete this level."
+			
+	return "" # 通過所有檢查
 
 func _on_clear_pressed() -> void:
 	AudioManager.play("ui_click")
@@ -75,7 +140,7 @@ func _on_back_pressed() -> void:
 	get_tree().change_scene_to_file("res://menu.tscn")
 
 func _process(delta: float) -> void:
-	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible
+	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible or alert_popup.visible
 	if not any_popup:
 		_handle_camera_movement(delta)
 
@@ -116,7 +181,7 @@ func _setup_popup_ui() -> void:
 		value_container.add_child(btn)
 
 func _on_tile_clicked(tile: Tile) -> void:
-	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible
+	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible or alert_popup.visible
 	if any_popup: return
 	
 	if current_mode == EditMode.PLAYER_START:
@@ -157,6 +222,13 @@ func _on_popup_value_selected(val: int) -> void:
 		AudioManager.play("ui_click")
 
 func _on_save_pressed() -> void:
+	var err = _validate_level()
+	if err != "":
+		alert_label.text = err
+		alert_popup.visible = true
+		AudioManager.play("error")
+		return
+		
 	AudioManager.play("ui_click")
 	file_name_edit.text = current_editing_file_name
 	save_popup.visible = true
@@ -168,37 +240,42 @@ func _on_load_pressed() -> void:
 
 func _refresh_load_list() -> void:
 	for child in load_list.get_children(): child.queue_free()
-	
-	var levels = []
-	levels.append_array(_get_json_files("res://levels/"))
+	var can_delete_res = (OS.get_name() != "Android")
+	_add_levels_to_load_list("res://levels/", can_delete_res)
 	var user_path = OS.get_user_data_dir() + "/levels/" if OS.get_name() == "Android" else "user://levels/"
-	levels.append_array(_get_json_files(user_path))
+	_add_levels_to_load_list(user_path, true)
 	
-	# 實作字母排序
+func _add_levels_to_load_list(path: String, can_delete: bool) -> void:
+	if not DirAccess.dir_exists_absolute(path): return
+	var dir = DirAccess.open(path)
+	dir.list_dir_begin()
+	var fn = dir.get_next()
+	var levels = []
+	while fn != "":
+		if not dir.current_is_dir() and fn.ends_with(".json"):
+			levels.append(path + fn)
+		fn = dir.get_next()
+	
 	levels.sort_custom(func(a, b): return a.get_file().to_lower() < b.get_file().to_lower())
 	
-	for file_path in levels:
-		var can_delete = not file_path.begins_with("res://") or (OS.get_name() != "Android")
-		_add_single_level_to_list(file_path, can_delete)
-
-func _add_single_level_to_list(file_path: String, can_delete: bool) -> void:
-	var hbox = HBoxContainer.new()
-	hbox.custom_minimum_size = Vector2(0, 100)
-	var btn = Button.new()
-	btn.text = file_path.get_file().get_basename()
-	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	btn.add_theme_font_size_override("font_size", 32)
-	btn.pressed.connect(func(): _load_level_to_editor(file_path))
-	hbox.add_child(btn)
-	if can_delete:
-		var del = Button.new()
-		del.text = " X "
-		del.custom_minimum_size = Vector2(100, 0)
-		del.add_theme_font_size_override("font_size", 32)
-		del.add_theme_color_override("font_color", Color.RED)
-		del.pressed.connect(func(): _on_delete_requested(file_path))
-		hbox.add_child(del)
-	load_list.add_child(hbox)
+	for full_path in levels:
+		var hbox = HBoxContainer.new()
+		hbox.custom_minimum_size = Vector2(0, 100)
+		var btn = Button.new()
+		btn.text = full_path.get_file().get_basename()
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.add_theme_font_size_override("font_size", 32)
+		btn.pressed.connect(func(): _load_level_to_editor(full_path))
+		hbox.add_child(btn)
+		if can_delete:
+			var del = Button.new()
+			del.text = " X "
+			del.custom_minimum_size = Vector2(100, 0)
+			del.add_theme_font_size_override("font_size", 32)
+			del.add_theme_color_override("font_color", Color.RED)
+			del.pressed.connect(func(): _on_delete_requested(full_path))
+			hbox.add_child(del)
+		load_list.add_child(hbox)
 
 func _on_delete_requested(path: String) -> void:
 	AudioManager.play("ui_click")
@@ -208,24 +285,11 @@ func _on_delete_requested(path: String) -> void:
 
 func _on_confirm_delete() -> void:
 	var path = pending_delete_path
-	if OS.get_name() == "Android":
-		path = path.replace("user://", OS.get_user_data_dir() + "/")
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 		AudioManager.play("error")
 	del_popup.visible = false
 	_refresh_load_list()
-
-func _get_json_files(path: String) -> Array:
-	var files = []
-	if DirAccess.dir_exists_absolute(path):
-		var dir = DirAccess.open(path)
-		dir.list_dir_begin()
-		var fn = dir.get_next()
-		while fn != "":
-			if not dir.current_is_dir() and fn.ends_with(".json"): files.append(path + fn)
-			fn = dir.get_next()
-	return files
 
 func _load_level_to_editor(path: String) -> void:
 	AudioManager.play("ui_click")
@@ -270,6 +334,13 @@ func _on_confirm_save() -> void:
 		AudioManager.play("error")
 
 func play_level() -> void:
+	var err = _validate_level()
+	if err != "":
+		alert_label.text = err
+		alert_popup.visible = true
+		AudioManager.play("error")
+		return
+		
 	GameState.preview_level_data = _get_current_level_data("Preview")
 	GameState.current_mode = GameState.GameMode.CUSTOM
 	GameState.selected_level_path = ""
@@ -281,7 +352,7 @@ func _update_ghost_pos() -> void:
 	ghost_player.global_position = Vector3(level.player_start_grid_pos.x, 0.5, level.player_start_grid_pos.y)
 
 func _unhandled_input(event: InputEvent) -> void:
-	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible
+	var any_popup = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible or alert_popup.visible
 	if any_popup: return
 	
 	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
@@ -319,3 +390,12 @@ func _update_tool_ui() -> void:
 		Tile.TileType.HOLE: type_name = "HOLE"
 		Tile.TileType.COLOR_CHANGER: type_name = "CHANGER"
 	tool_label.text = "Tool: " + type_name
+
+func _get_color_name(c: Color) -> String:
+	if c == Color.RED: return "Red"
+	if c == Color.GREEN: return "Green"
+	if c == Color.BLUE: return "Blue"
+	if c == Color.YELLOW: return "Yellow"
+	if c == Color.PURPLE: return "Purple"
+	if c == Color.DARK_GREEN: return "Dark Green"
+	return "White"
