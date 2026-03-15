@@ -1,0 +1,16 @@
+{
+	"metadata": {
+		"author": "Paddyliu",
+		"date": "2026-03-15T08:06:09",
+		"level_name": "My Custom Level"
+	},
+	"settings": {
+		"grid_height": 10,
+		"grid_width": 10,
+		"start_pos": {
+			"x": 0,
+			"z": 0
+		}
+	},
+	"tiles": []
+}

@@ -20,6 +20,7 @@ var active_tween: Tween
 @onready var icon: Sprite3D = $Icon
 
 signal clicked(tile: Tile)
+signal right_clicked(tile: Tile)
 
 func _ready() -> void:
 	_update_visuals()
@@ -30,13 +31,16 @@ var _mouse_down_pos: Vector2 = Vector2.ZERO
 
 # 處理滑鼠點擊 (需要 StaticBody3D)
 func _input_event(_camera: Camera3D, event: InputEvent, _position: Vector3, _normal: Vector3, _shape_idx: int) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton:
 		if event.pressed:
 			_mouse_down_pos = event.position
 		else:
-			# 放開時檢查位移，如果位移很小 (小於 5 像素)，視為點擊
+			# 放開時檢查位移
 			if event.position.distance_to(_mouse_down_pos) < 5.0:
-				clicked.emit(self)
+				if event.button_index == MOUSE_BUTTON_LEFT:
+					clicked.emit(self)
+				elif event.button_index == MOUSE_BUTTON_RIGHT:
+					right_clicked.emit(self)
 
 # 更新格子的視覺顯示
 func _update_visuals() -> void:

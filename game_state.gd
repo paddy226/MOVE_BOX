@@ -9,5 +9,5 @@ var selected_level_path: String = ""
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
 var last_camera_distance: float = 9.0
 var current_steps: int = 0
-var version_number: String = "v1.0.8"
+var version_number: String = "v1.0.9"
 var author_name: String = "Paddyliu"

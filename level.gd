@@ -8,7 +8,14 @@ extends Node3D
 var tiles: Dictionary = {} 
 var total_goals: int = 0
 var completed_goals: int = 0
-var possible_colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.PURPLE]
+var possible_colors = [
+	Color.RED, 
+	Color.GREEN, 
+	Color.BLUE, 
+	Color.YELLOW, 
+	Color.PURPLE,
+	Color.DARK_GREEN
+]
 var player_start_grid_pos: Vector2i = Vector2i(0, 0) # 方塊初始位置
 
 signal level_cleared
