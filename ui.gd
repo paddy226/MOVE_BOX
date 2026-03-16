@@ -123,6 +123,10 @@ func flash_screen() -> void:
 
 func _on_level_cleared() -> void:
 	victory_panel.visible = true
+	# 挑戰模式特有邏輯：儲存進度
+	if GameState.current_mode == GameState.GameMode.CHALLENGE and GameState.current_challenge_id != -1:
+		GameState.save_progress(GameState.current_challenge_id)
+		print("挑戰關卡 #", GameState.current_challenge_id, " 已過關並儲存進度")
 
 func _on_restart_button_pressed() -> void:
 	AudioManager.play("ui_click")
