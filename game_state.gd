@@ -12,5 +12,5 @@ var is_preview_mode: bool = false # 新增：是否處於預覽模式
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
 var last_camera_distance: float = 9.0
 var current_steps: int = 0
-var version_number: String = "v1.0.11"
+var version_number: String = "v1.0.12"
 var author_name: String = "Paddyliu"

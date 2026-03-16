@@ -83,31 +83,32 @@ func _setup_back_button() -> void:
 		back_btn.name = "BackButton"
 		hud.add_child(back_btn)
 		
-		# 載入左箭頭圖示
 		var icon_tex = load("res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png")
 		back_btn.texture_normal = icon_tex
 		
-		# 設定位置 (左下角，留 30 像素邊距)
+		# 統一規格：尺寸與座標
 		back_btn.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 30)
+		back_btn.offset_top = -110
+		back_btn.offset_right = 110
 		
-		# 調整大小
-		back_btn.custom_minimum_size = Vector2(64, 64)
+		back_btn.custom_minimum_size = Vector2(80, 80)
 		back_btn.ignore_texture_size = true
 		back_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		
-		# 設定半透明白色
 		back_btn.modulate = Color(1, 1, 1, 0.8)
-		
-		# 連接按下事件
 		back_btn.pressed.connect(_on_back_button_pressed)
 	back_btn.move_to_front()
 
 func _on_back_button_pressed() -> void:
 	AudioManager.play("ui_click")
-	# 智慧導向：如果是預覽模式，回編輯器；否則回選單
+	# 智慧導向邏輯
 	if GameState.is_preview_mode:
+		# 預覽模式 -> 回到編輯器
 		get_tree().change_scene_to_file("res://editor.tscn")
+	elif GameState.current_mode == GameState.GameMode.CUSTOM:
+		# 自訂關卡模式 -> 回到關卡選擇清單
+		get_tree().change_scene_to_file("res://level_select.tscn")
 	else:
+		# 隨機或其他模式 -> 回到主選單
 		get_tree().change_scene_to_file("res://menu.tscn")
 
 func _on_player_stepped(count: int) -> void:

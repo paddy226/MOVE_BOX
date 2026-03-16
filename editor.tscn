@@ -1,9 +1,19 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://editor.gd" id="1_editor_script"]
 [ext_resource type="Script" path="res://level.gd" id="2_level_script"]
 [ext_resource type="Script" path="res://camera_controller.gd" id="3_camera_script"]
 [ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png" id="4_back_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/save.png" id="5_save_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/import.png" id="6_load_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/right.png" id="7_play_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/trashcan.png" id="8_clear_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/menuGrid.png" id="9_tile_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/target.png" id="10_goal_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/stop.png" id="11_wall_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/cross.png" id="12_hole_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/return.png" id="13_changer_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/singleplayer.png" id="14_start_icon"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Ghost"]
 size = Vector3(1, 1, 1)
@@ -68,8 +78,8 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 30.0
-offset_top = -94.0
-offset_right = 94.0
+offset_top = -110.0
+offset_right = 110.0
 offset_bottom = -30.0
 grow_vertical = 0
 texture_normal = ExtResource("4_back_icon")
@@ -77,66 +87,114 @@ ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(1, 1, 1, 0.8)
 
-[node name="ClearButton" type="Button" parent="CanvasLayer/HUD"]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = -200.0
-offset_right = 180.0
-offset_bottom = -130.0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 32
-text = "CLEAR"
-
-[node name="SaveButton" type="Button" parent="CanvasLayer/HUD"]
+[node name="Toolbar" type="HBoxContainer" parent="CanvasLayer/HUD"]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -180.0
-offset_top = -100.0
+offset_left = -450.0
+offset_top = -110.0
 offset_right = -30.0
 offset_bottom = -30.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_font_sizes/font_size = 32
-text = "SAVE"
+theme_override_constants/separation = 25
+alignment = 2
 
-[node name="LoadButton" type="Button" parent="CanvasLayer/HUD"]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -340.0
-offset_top = -100.0
-offset_right = -190.0
-offset_bottom = -30.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 32
-text = "LOAD"
+[node name="ClearButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("8_clear_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 0.3, 0.3, 0.8)
 
-[node name="PlayButton" type="Button" parent="CanvasLayer/HUD"]
+[node name="LoadButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("6_load_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.8)
+
+[node name="SaveButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("5_save_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.8)
+
+[node name="PlayButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("7_play_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(0.4, 1, 0.4, 0.8)
+
+[node name="ToolPalette" type="VBoxContainer" parent="CanvasLayer/HUD"]
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -500.0
-offset_top = -100.0
-offset_right = -350.0
-offset_bottom = -30.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_font_sizes/font_size = 32
-text = "PLAY"
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 30.0
+offset_top = -300.0
+offset_right = 110.0
+offset_bottom = 300.0
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Btn_Tile" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("9_tile_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
+
+[node name="Btn_Goal" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("10_goal_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
+
+[node name="Btn_Wall" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("11_wall_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
+
+[node name="Btn_Hole" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("12_hole_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
+
+[node name="Btn_Changer" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("13_changer_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
+
+[node name="Btn_Start" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+texture_normal = ExtResource("14_start_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.6)
 
 [node name="HelpLabel" type="Label" parent="CanvasLayer/HUD"]
 layout_mode = 1
@@ -150,8 +208,6 @@ offset_bottom = 310.0
 grow_horizontal = 0
 theme_override_font_sizes/font_size = 24
 text = "Tab: Cycle Tools
-1-5: Shortcuts
-B: Set Start Pos
 WASD / Drag: Move
 Click: Edit / Settings"
 horizontal_alignment = 2
