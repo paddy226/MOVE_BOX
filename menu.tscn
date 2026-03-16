@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid_menu_001"]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://menu.gd" id="1_menu_script"]
 
@@ -45,26 +45,32 @@ anchor_bottom = 0.5
 offset_left = -200.0
 offset_top = -150.0
 offset_right = 200.0
-offset_bottom = 250.0
+offset_bottom = 350.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 25
 alignment = 1
 
 [node name="RandomButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Random"
 
+[node name="ChallengeButton" type="Button" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Challenge"
+
 [node name="CustomButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Custom"
 
 [node name="EditorButton" type="Button" parent="VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 90)
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Editor"
@@ -84,6 +90,6 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 24
-text = "v1.0.6 by Paddyliu"
+text = "v1.0.12 by Paddyliu"
 horizontal_alignment = 1
 vertical_alignment = 1

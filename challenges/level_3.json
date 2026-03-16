@@ -1,0 +1,8 @@
+{
+  "metadata": { "level_name": "Training 03", "author": "Paddyliu" },
+  "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 0, "z": 0} },
+  "tiles": [
+    { "pos": {"x": 2, "z": 2}, "type": "GOAL", "color": "#FF0000", "value": 5 },
+    { "pos": {"x": -2, "z": 2}, "type": "COLOR_CHANGER", "color": "#FF0000" }
+  ]
+}

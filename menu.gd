@@ -5,6 +5,8 @@ func _ready() -> void:
 	# 設定按鈕連接
 	$VBoxContainer/RandomButton.pressed.connect(_on_random_pressed)
 	$VBoxContainer/CustomButton.pressed.connect(_on_custom_pressed)
+	if $VBoxContainer.has_node("ChallengeButton"):
+		$VBoxContainer/ChallengeButton.pressed.connect(_on_challenge_pressed)
 	$VBoxContainer/EditorButton.pressed.connect(_on_editor_pressed)
 	
 	# 顯示版本號
@@ -18,6 +20,10 @@ func _on_random_pressed() -> void:
 func _on_custom_pressed() -> void:
 	AudioManager.play("ui_click")
 	get_tree().change_scene_to_file("res://level_select.tscn")
+
+func _on_challenge_pressed() -> void:
+	AudioManager.play("ui_click")
+	get_tree().change_scene_to_file("res://challenge_select.tscn")
 
 func _on_editor_pressed() -> void:
 	AudioManager.play("ui_click")
