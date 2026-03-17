@@ -26,8 +26,15 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.18"
+var version_number: String = "v1.0.19"
 var author_name: String = "Paddyliu"
+
+func update_challenge_page_by_id(level_id: int) -> void:
+	# 假設每頁 10 關 (與 challenge_select.gd 保持一致)
+	# Level 1-10 -> Page 0
+	# Level 11-20 -> Page 1
+	challenge_page = (level_id - 1) / 10
+	print("[GameState] 自動同步頁碼至: ", challenge_page + 1, " (Level ID: ", level_id, ")")
 
 func get_data_hash(data: Dictionary) -> String:
 	var s = JSON.stringify(data)

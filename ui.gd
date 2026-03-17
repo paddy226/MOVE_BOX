@@ -55,6 +55,7 @@ func _download_and_start_next(url: String, new_id: int) -> void:
 			var json = JSON.new()
 			if json.parse(body.get_string_from_utf8()) == OK:
 				GameState.current_challenge_id = new_id
+				GameState.update_challenge_page_by_id(new_id) # 同步頁碼
 				GameState.preview_level_data = json.get_data()
 				
 				# 從快取更新目前的 SHA

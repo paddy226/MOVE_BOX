@@ -117,6 +117,7 @@ func _on_level_pressed(url: String, level_id: int, sha: String) -> void:
 	GameState.current_mode = GameState.GameMode.CHALLENGE
 	GameState.current_challenge_id = level_id
 	GameState.current_level_sha = sha # 暫存 SHA
+	GameState.update_challenge_page_by_id(level_id) # 同步當前頁碼
 	_start_challenge(url)
 
 func _start_challenge(url: String) -> void:
