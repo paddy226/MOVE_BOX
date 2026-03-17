@@ -58,6 +58,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="VictoryPanel" type="Control" parent="UI"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -81,27 +82,33 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -100.0
-offset_right = 150.0
-offset_bottom = 100.0
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 40
+theme_override_constants/separation = 30
 alignment = 1
 
 [node name="Label" type="Label" parent="UI/VictoryPanel/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "Level Cleared!"
+theme_override_font_sizes/font_size = 64
+text = "LEVEL CLEARED!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RestartButton" type="Button" parent="UI/VictoryPanel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 80)
+[node name="NextButton" type="Button" parent="UI/VictoryPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "Restart"
+theme_override_font_sizes/font_size = 48
+text = "NEXT"
+
+[node name="RestartButton" type="Button" parent="UI/VictoryPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "RESTART"
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
@@ -115,7 +122,7 @@ transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 0.5, 0)
 script = ExtResource("5_camera")
 
 [node name="Camera3D" type="Camera3D" parent="CameraPivot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9)
 
 [node name="Level" type="Node3D" parent="."]
 script = ExtResource("3_level")

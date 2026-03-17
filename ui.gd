@@ -1,7 +1,8 @@
 extends CanvasLayer
-# ui.gd - 管理勝利 UI、重啟邏輯與返回選單
+# ui.gd - 管理勝利 UI、重啟邏輯與挑戰模式 NEXT 功能
 
 @onready var victory_panel: Control = $VictoryPanel
+@onready var next_btn: Button = $VictoryPanel/VBoxContainer/NextButton
 @onready var step_label: Label = $HUD/StepLabel
 @onready var flash_rect: ColorRect = $FlashRect
 
@@ -11,122 +12,106 @@ func _ready() -> void:
 	flash_rect.modulate.a = 0.0
 	step_label.text = "Steps: 0"
 	
-	# 顯示版本號
 	_setup_version_label()
-	
-	# 設定重新開始按鈕 (右上)
 	_setup_restart_button()
-	
-	# 設定返回選單按鈕 (左下)
 	_setup_back_button()
 	
-	# 連接勝利面板的按鈕
-	var restart_btn = $VictoryPanel/VBoxContainer/RestartButton
-	restart_btn.pressed.connect(_on_restart_button_pressed)
+	# 連接按鈕
+	$VictoryPanel/VBoxContainer/RestartButton.pressed.connect(_on_restart_button_pressed)
+	next_btn.pressed.connect(_on_next_button_pressed)
 	
-	# 連接 Player 的信號
 	var player = get_tree().current_scene.get_node_or_null("Player")
-	if player:
-		player.stepped.connect(_on_player_stepped)
+	if player: player.stepped.connect(_on_player_stepped)
 	
-	# 連接 Level 的信號
 	var level = get_tree().current_scene.get_node_or_null("Level")
-	if level:
-		level.level_cleared.connect(_on_level_cleared)
-
-func _setup_version_label() -> void:
-	var hud = get_node_or_null("HUD")
-	if not hud: return
-	
-	var version_label = hud.get_node_or_null("VersionLabel")
-	if not version_label:
-		version_label = Label.new()
-		version_label.name = "VersionLabel"
-		hud.add_child(version_label)
-		version_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		version_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		version_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		version_label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 20)
-		version_label.add_theme_color_override("font_outline_color", Color.BLACK)
-		version_label.add_theme_constant_override("outline_size", 4)
-	
-	version_label.text = GameState.version_number + " by " + GameState.author_name
-	version_label.move_to_front()
-
-func _setup_restart_button() -> void:
-	var hud = get_node_or_null("HUD")
-	if not hud: return
-	
-	var restart_btn = hud.get_node_or_null("ManualRestartButton")
-	if not restart_btn:
-		restart_btn = TextureButton.new()
-		restart_btn.name = "ManualRestartButton"
-		hud.add_child(restart_btn)
-		var icon_tex = load("res://assets/kenney_game-icons/PNG/White/2x/return.png")
-		restart_btn.texture_normal = icon_tex
-		restart_btn.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 30)
-		restart_btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		restart_btn.custom_minimum_size = Vector2(64, 64)
-		restart_btn.ignore_texture_size = true
-		restart_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		restart_btn.modulate = Color(1, 1, 1, 0.8)
-		restart_btn.pressed.connect(_on_restart_button_pressed)
-	restart_btn.move_to_front()
-
-func _setup_back_button() -> void:
-	var hud = get_node_or_null("HUD")
-	if not hud: return
-	
-	var back_btn = hud.get_node_or_null("BackButton")
-	if not back_btn:
-		back_btn = TextureButton.new()
-		back_btn.name = "BackButton"
-		hud.add_child(back_btn)
-		
-		var icon_tex = load("res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png")
-		back_btn.texture_normal = icon_tex
-		
-		# 統一規格：尺寸與座標
-		back_btn.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 30)
-		back_btn.offset_top = -110
-		back_btn.offset_right = 110
-		
-		back_btn.custom_minimum_size = Vector2(80, 80)
-		back_btn.ignore_texture_size = true
-		back_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-		back_btn.modulate = Color(1, 1, 1, 0.8)
-		back_btn.pressed.connect(_on_back_button_pressed)
-	back_btn.move_to_front()
-
-func _on_back_button_pressed() -> void:
-	AudioManager.play("ui_click")
-	# 智慧導向邏輯
-	if GameState.is_preview_mode:
-		# 預覽模式 -> 回到編輯器
-		get_tree().change_scene_to_file("res://editor.tscn")
-	elif GameState.current_mode == GameState.GameMode.CUSTOM:
-		# 自訂關卡模式 -> 回到關卡選擇清單
-		get_tree().change_scene_to_file("res://level_select.tscn")
-	else:
-		# 隨機或其他模式 -> 回到主選單
-		get_tree().change_scene_to_file("res://menu.tscn")
-
-func _on_player_stepped(count: int) -> void:
-	step_label.text = "Steps: " + str(count)
-
-func flash_screen() -> void:
-	flash_rect.visible = true
-	flash_rect.modulate.a = 0.5
-	var tween = get_tree().create_tween()
-	tween.tween_property(flash_rect, "modulate:a", 0.0, 0.3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.chain().tween_callback(func(): flash_rect.visible = false)
+	if level: level.level_cleared.connect(_on_level_cleared)
 
 func _on_level_cleared() -> void:
 	victory_panel.visible = true
-	# 挑戰模式特有邏輯：儲存進度
-	if GameState.current_mode == GameState.GameMode.CHALLENGE and GameState.current_challenge_id != -1:
+	
+	# 只有在挑戰模式下顯示 NEXT 按鈕
+	if GameState.current_mode == GameState.GameMode.CHALLENGE:
 		GameState.save_progress(GameState.current_challenge_id)
-		print("挑戰關卡 #", GameState.current_challenge_id, " 已過關並儲存進度")
+		next_btn.visible = true
+	else:
+		next_btn.visible = false
+
+func _on_next_button_pressed() -> void:
+	AudioManager.play("ui_click")
+	# 挑戰模式下一關邏輯
+	var next_id = GameState.current_challenge_id + 1
+	var next_url = GameState.GITHUB_RAW_URL + "level_" + str(next_id) + ".json"
+	
+	_download_and_start_next(next_url, next_id)
+
+func _download_and_start_next(url: String, new_id: int) -> void:
+	print("[UI] 嘗試連線下一關: ", url)
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_res, code, _hdr, body):
+		print("[UI] GitHub 回應碼: ", code)
+		if code == 200:
+			var json = JSON.new()
+			if json.parse(body.get_string_from_utf8()) == OK:
+				GameState.current_challenge_id = new_id
+				GameState.preview_level_data = json.get_data()
+				print("[UI] 下一關載入成功，準備重啟場景")
+				get_tree().reload_current_scene()
+		else:
+			print("[UI] 找不到下一關或連線失敗。網址: ", url)
+			get_tree().change_scene_to_file("res://challenge_select.tscn")
+		http.queue_free()
+	)
+	http.request(url)
+
+# --- 基礎 UI 設定 ---
+func _setup_version_label() -> void:
+	var hud = $HUD
+	var label = Label.new()
+	label.name = "VersionLabel"
+	hud.add_child(label)
+	label.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE, 20)
+	label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	label.text = GameState.version_number + " by " + GameState.author_name
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 4)
+
+func _setup_restart_button() -> void:
+	var btn = TextureButton.new()
+	btn.name = "ManualRestartButton"
+	$HUD.add_child(btn)
+	btn.texture_normal = load("res://assets/kenney_game-icons/PNG/White/2x/return.png")
+	btn.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 30)
+	btn.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	btn.custom_minimum_size = Vector2(80, 80)
+	btn.ignore_texture_size = true
+	btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	btn.modulate = Color(1, 1, 1, 0.8)
+	btn.pressed.connect(_on_restart_button_pressed)
+
+func _setup_back_button() -> void:
+	var btn = TextureButton.new()
+	btn.name = "BackButton"
+	$HUD.add_child(btn)
+	btn.texture_normal = load("res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png")
+	btn.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT, Control.PRESET_MODE_MINSIZE, 30)
+	btn.offset_top = -110
+	btn.offset_right = 110
+	btn.custom_minimum_size = Vector2(80, 80)
+	btn.ignore_texture_size = true
+	btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
+	btn.modulate = Color(1, 1, 1, 0.8)
+	btn.pressed.connect(_on_back_button_pressed)
+
+func _on_back_button_pressed() -> void:
+	AudioManager.play("ui_click")
+	if GameState.is_preview_mode: get_tree().change_scene_to_file("res://editor.tscn")
+	elif GameState.current_mode == GameState.GameMode.CHALLENGE: get_tree().change_scene_to_file("res://challenge_select.tscn")
+	elif GameState.current_mode == GameState.GameMode.CUSTOM: get_tree().change_scene_to_file("res://level_select.tscn")
+	else: get_tree().change_scene_to_file("res://menu.tscn")
+
+func _on_player_stepped(count: int) -> void:
+	step_label.text = "Steps: " + str(count)
 
 func _on_restart_button_pressed() -> void:
 	AudioManager.play("ui_click")
@@ -134,4 +119,5 @@ func _on_restart_button_pressed() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if victory_panel.visible and event.is_action_pressed("ui_accept"):
-		_on_restart_button_pressed()
+		if next_btn.visible: _on_next_button_pressed()
+		else: _on_restart_button_pressed()

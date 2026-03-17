@@ -12,7 +12,7 @@ var current_challenge_id: int = -1
 const GITHUB_USER = "paddy226"
 const GITHUB_REPO = "MOVE_BOX"
 const GITHUB_API_URL = "https://api.github.com/repos/paddy226/MOVE_BOX/contents/challenges"
-const GITHUB_RAW_URL = "https://raw.githubusercontent.com/paddy226/MOVE_BOX/main/challenges/"
+const GITHUB_RAW_URL = "https://raw.githubusercontent.com/paddy226/MOVE_BOX/master/challenges/"
 
 var cleared_challenges: Array = []
 const PROGRESS_FILE = "user://challenge_progress.json"
@@ -20,7 +20,7 @@ const PROGRESS_FILE = "user://challenge_progress.json"
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
 var last_camera_distance: float = 9.0
 var current_steps: int = 0
-var version_number: String = "v1.0.13"
+var version_number: String = "v1.0.14"
 var author_name: String = "Paddyliu"
 
 func _ready() -> void:
