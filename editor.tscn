@@ -60,98 +60,113 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="ToolLabel" type="Label" parent="CanvasLayer/HUD"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -300.0
-offset_top = 40.0
-offset_right = 300.0
-offset_bottom = 90.0
-grow_horizontal = 2
-theme_override_font_sizes/font_size = 40
-text = "Tool: TILE"
-horizontal_alignment = 1
+	[node name="ToolLabel" type="Label" parent="CanvasLayer/HUD"]
+	layout_mode = 1
+	anchors_preset = 5
+	anchor_left = 0.5
+	anchor_right = 0.5
+	offset_left = -300.0
+	offset_top = 40.0
+	offset_right = 300.0
+	offset_bottom = 90.0
+	grow_horizontal = 2
+	theme_override_font_sizes/font_size = 40
+	text = "Tool: TILE"
+	horizontal_alignment = 1
 
-[node name="BackButton" type="TextureButton" parent="CanvasLayer/HUD"]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 30.0
-offset_top = -110.0
-offset_right = 110.0
-offset_bottom = -30.0
-grow_vertical = 0
-texture_normal = ExtResource("4_back_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0.8)
+	[node name="BackButton" type="TextureButton" parent="CanvasLayer/HUD"]
+	layout_mode = 1
+	anchors_preset = 2
+	anchor_top = 1.0
+	anchor_bottom = 1.0
+	offset_left = 30.0
+	offset_top = -110.0
+	offset_right = 110.0
+	offset_bottom = -30.0
+	grow_vertical = 0
+	texture_normal = ExtResource("4_back_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(1, 1, 1, 0.8)
 
-[node name="Toolbar" type="HBoxContainer" parent="CanvasLayer/HUD"]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -310.0
-offset_top = -110.0
-offset_right = 310.0
-offset_bottom = -30.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_constants/separation = 25
-alignment = 1
+	[node name="ShareToolbar" type="HBoxContainer" parent="CanvasLayer/HUD"]
+	layout_mode = 1
+	anchors_preset = 1
+	anchor_left = 1.0
+	anchor_right = 1.0
+	offset_left = -250.0
+	offset_top = 30.0
+	offset_right = -30.0
+	offset_bottom = 110.0
+	grow_horizontal = 0
+	theme_override_constants/separation = 25
+	alignment = 2
 
-[node name="ClearButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-texture_normal = ExtResource("8_clear_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(1, 0.3, 0.3, 0.8)
+	[node name="ImportButton" type="TextureButton" parent="CanvasLayer/HUD/ShareToolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	tooltip_text = "Import Level JSON from Clipboard"
+	texture_normal = ExtResource("16_import_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(0, 1, 1, 0.8)
 
-[node name="LoadButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-texture_normal = ExtResource("6_load_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0.8)
+	[node name="ShareButton" type="TextureButton" parent="CanvasLayer/HUD/ShareToolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	tooltip_text = "Copy Level JSON to Clipboard"
+	texture_normal = ExtResource("14_share_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(1, 1, 1, 0.8)
 
-[node name="SaveButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-texture_normal = ExtResource("5_save_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0.8)
+	[node name="Toolbar" type="HBoxContainer" parent="CanvasLayer/HUD"]
+	layout_mode = 1
+	anchors_preset = 3
+	anchor_left = 1.0
+	anchor_top = 1.0
+	anchor_right = 1.0
+	anchor_bottom = 1.0
+	offset_left = -450.0
+	offset_top = -110.0
+	offset_right = -30.0
+	offset_bottom = -30.0
+	grow_horizontal = 0
+	grow_vertical = 0
+	theme_override_constants/separation = 25
+	alignment = 2
 
-[node name="PlayButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-texture_normal = ExtResource("7_play_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(0.4, 1, 0.4, 0.8)
+	[node name="ClearButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	texture_normal = ExtResource("8_clear_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(1, 0.3, 0.3, 0.8)
 
-[node name="ImportButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
-custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-tooltip_text = "Import Level JSON from Clipboard"
-texture_normal = ExtResource("16_import_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(0, 1, 1, 0.8)
-[node name="ShareButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]custom_minimum_size = Vector2(80, 80)
-layout_mode = 2
-tooltip_text = "Copy Level JSON to Clipboard"
-texture_normal = ExtResource("14_share_icon")
-ignore_texture_size = true
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0.8)
+	[node name="LoadButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	texture_normal = ExtResource("6_load_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(1, 1, 1, 0.8)
+
+	[node name="SaveButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	texture_normal = ExtResource("5_save_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(1, 1, 1, 0.8)
+
+	[node name="PlayButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+	custom_minimum_size = Vector2(80, 80)
+	layout_mode = 2
+	texture_normal = ExtResource("7_play_icon")
+	ignore_texture_size = true
+	stretch_mode = 5
+	modulate = Color(0.4, 1, 0.4, 0.8)
 
 [node name="ToolPalette" type="VBoxContainer" parent="CanvasLayer/HUD"]
 layout_mode = 1
@@ -215,6 +230,7 @@ stretch_mode = 5
 modulate = Color(1, 1, 1, 0.6)
 
 [node name="HelpLabel" type="Label" parent="CanvasLayer/HUD"]
+visible = false
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0

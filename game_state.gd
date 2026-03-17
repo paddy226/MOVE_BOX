@@ -26,7 +26,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.20"
+var version_number: String = "v1.0.21"
 var author_name: String = "Paddyliu"
 
 func update_challenge_page_by_id(level_id: int) -> void:

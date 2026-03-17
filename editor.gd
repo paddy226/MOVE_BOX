@@ -20,6 +20,7 @@ extends Node3D
 
 # UI 容器
 @onready var toolbar = $CanvasLayer/HUD/Toolbar
+@onready var share_toolbar = $CanvasLayer/HUD/ShareToolbar
 @onready var palette = $CanvasLayer/HUD/ToolPalette
 
 @export var move_speed: float = 10.0
@@ -71,11 +72,12 @@ func _ready() -> void:
 	toolbar.get_node("SaveButton").pressed.connect(_on_save_pressed)
 	toolbar.get_node("LoadButton").pressed.connect(_on_load_pressed)
 	toolbar.get_node("PlayButton").pressed.connect(play_level)
-	if toolbar.has_node("ImportButton"):
-		toolbar.get_node("ImportButton").pressed.connect(_on_import_pressed)
-	if toolbar.has_node("ShareButton"):
-		toolbar.get_node("ShareButton").pressed.connect(_on_share_pressed)
 	toolbar.get_node("ClearButton").pressed.connect(_on_clear_pressed)
+	
+	if share_toolbar.has_node("ImportButton"):
+		share_toolbar.get_node("ImportButton").pressed.connect(_on_import_pressed)
+	if share_toolbar.has_node("ShareButton"):
+		share_toolbar.get_node("ShareButton").pressed.connect(_on_share_pressed)
 	
 	# 彈窗按鈕
 	$CanvasLayer/PropertyPopup/VBoxContainer/CloseButton.pressed.connect(func(): prop_popup.visible = false)
@@ -404,6 +406,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_B: current_mode = EditMode.PLAYER_START; _update_tool_ui()
 
 func _update_tool_ui() -> void:
+	# 更新左側 Palette
 	for i in range(palette.get_child_count()):
 		var btn = palette.get_child(i)
 		if btn is TextureButton:
@@ -412,14 +415,18 @@ func _update_tool_ui() -> void:
 			else:
 				btn.modulate.a = 1.0 if i == current_tool_idx else 0.6
 
-	if current_mode == EditMode.PLAYER_START: tool_label.text = "Tool: START POS"; return
+	# 更新 ToolLabel (簡化顯示)
 	var type_name = ""
-	match tools[current_tool_idx]:
-		Tile.TileType.DEFAULT: type_name = "TILE"
-		Tile.TileType.GOAL: type_name = "GOAL"
-		Tile.TileType.OBSTACLE: type_name = "WALL"
-		Tile.TileType.HOLE: type_name = "HOLE"
-		Tile.TileType.COLOR_CHANGER: type_name = "CHANGER"
+	if current_mode == EditMode.PLAYER_START:
+		type_name = "START POS"
+	else:
+		match tools[current_tool_idx]:
+			Tile.TileType.DEFAULT: type_name = "TILE"
+			Tile.TileType.GOAL: type_name = "GOAL"
+			Tile.TileType.OBSTACLE: type_name = "WALL"
+			Tile.TileType.HOLE: type_name = "HOLE"
+			Tile.TileType.COLOR_CHANGER: type_name = "CHANGER"
+	
 	tool_label.text = "Tool: " + type_name
 
 func _get_color_name(c: Color) -> String:
