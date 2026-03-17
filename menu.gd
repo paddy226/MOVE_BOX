@@ -14,18 +14,22 @@ func _ready() -> void:
 
 func _on_random_pressed() -> void:
 	AudioManager.play("ui_click")
+	GameState.reset_level_state()
 	GameState.current_mode = GameState.GameMode.RANDOM
 	get_tree().change_scene_to_file("res://main.tscn")
 
 func _on_custom_pressed() -> void:
 	AudioManager.play("ui_click")
+	GameState.reset_level_state()
 	get_tree().change_scene_to_file("res://level_select.tscn")
 
 func _on_challenge_pressed() -> void:
 	AudioManager.play("ui_click")
+	GameState.reset_level_state()
 	get_tree().change_scene_to_file("res://challenge_select.tscn")
 
 func _on_editor_pressed() -> void:
 	AudioManager.play("ui_click")
+	GameState.reset_level_state()
 	GameState.current_mode = GameState.GameMode.EDITOR
 	get_tree().change_scene_to_file("res://editor.tscn")

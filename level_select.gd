@@ -8,7 +8,10 @@ extends Control
 var pending_delete_path: String = ""
 
 func _ready() -> void:
-	$BackButton.pressed.connect(func(): get_tree().change_scene_to_file("res://menu.tscn"))
+	$BackButton.pressed.connect(func(): 
+		GameState.reset_level_state()
+		get_tree().change_scene_to_file("res://menu.tscn")
+	)
 	
 	# 連接刪除彈窗按鈕
 	$DeletePopup/VBoxContainer/HBox/ConfirmDel.pressed.connect(_on_confirm_delete)

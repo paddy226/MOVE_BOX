@@ -1,0 +1,18 @@
+{
+  "metadata": { "level_name": "Challenge Level 13", "author": "Paddyliu" },
+  "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 0, "z": 0} },
+  "tiles": [
+    { "pos": {"x": 4, "z": 0}, "type": "GOAL", "color": "#FF0000", "value": 5 },
+    { "pos": {"x": 0, "z": 4}, "type": "GOAL", "color": "#00FF00", "value": 5 },
+    { "pos": {"x": -4, "z": 0}, "type": "GOAL", "color": "#0000FF", "value": 5 },
+    { "pos": {"x": 0, "z": -4}, "type": "GOAL", "color": "#FFFF00", "value": 5 },
+    { "pos": {"x": 2, "z": 2}, "type": "COLOR_CHANGER", "color": "#FF0000", "value": 0, "uses": -1 },
+    { "pos": {"x": -2, "z": 2}, "type": "COLOR_CHANGER", "color": "#00FF00", "value": 0, "uses": -1 },
+    { "pos": {"x": -2, "z": -2}, "type": "COLOR_CHANGER", "color": "#0000FF", "value": 0, "uses": -1 },
+    { "pos": {"x": 2, "z": -2}, "type": "COLOR_CHANGER", "color": "#FFFF00", "value": 0, "uses": -1 },
+    { "pos": {"x": 1, "z": 1}, "type": "OBSTACLE" },
+    { "pos": {"x": -1, "z": 1}, "type": "OBSTACLE" },
+    { "pos": {"x": -1, "z": -1}, "type": "OBSTACLE" },
+    { "pos": {"x": 1, "z": -1}, "type": "OBSTACLE" }
+  ]
+}

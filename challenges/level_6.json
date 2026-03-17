@@ -1,0 +1,11 @@
+{
+  "metadata": { "level_name": "Challenge Level 6", "author": "Paddyliu" },
+  "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 0, "z": -4} },
+  "tiles": [
+    { "pos": {"x": -2, "z": 4}, "type": "GOAL", "color": "#0000FF", "value": 3 },
+    { "pos": {"x": 2, "z": 4}, "type": "GOAL", "color": "#0000FF", "value": 3 },
+    { "pos": {"x": 0, "z": 0}, "type": "COLOR_CHANGER", "color": "#0000FF", "value": 0, "uses": -1 },
+    { "pos": {"x": -1, "z": 2}, "type": "OBSTACLE" },
+    { "pos": {"x": 1, "z": 2}, "type": "OBSTACLE" }
+  ]
+}

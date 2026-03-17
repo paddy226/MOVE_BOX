@@ -1,0 +1,10 @@
+{
+  "metadata": { "level_name": "Challenge Level 10", "author": "Paddyliu" },
+  "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": -2, "z": -2} },
+  "tiles": [
+    { "pos": {"x": 2, "z": 2}, "type": "GOAL", "color": "#FF0000", "value": 5 },
+    { "pos": {"x": 2, "z": -2}, "type": "GOAL", "color": "#00FF00", "value": 5 },
+    { "pos": {"x": -2, "z": 2}, "type": "COLOR_CHANGER", "color": "#FF0000", "value": 0, "uses": -1 },
+    { "pos": {"x": 0, "z": 0}, "type": "COLOR_CHANGER", "color": "#00FF00", "value": 0, "uses": -1 }
+  ]
+}

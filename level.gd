@@ -25,15 +25,22 @@ const LEVEL_DIR = "res://levels/"
 func _ready() -> void:
 	randomize()
 	
-	# 根據模式決定載入邏輯
-	if not GameState.preview_level_data.is_empty():
-		# 載入預覽資料，但不在此處清除，讓編輯器也能讀取
+	# 核心邏輯：根據模式與資料狀態決定載入方式
+	var should_use_preview = not GameState.preview_level_data.is_empty() and (
+		GameState.current_mode == GameState.GameMode.CHALLENGE or 
+		GameState.current_mode == GameState.GameMode.EDITOR or 
+		GameState.is_preview_mode
+	)
+	
+	if should_use_preview:
+		# 載入預覽/挑戰資料
 		generate_from_data(GameState.preview_level_data)
 	elif GameState.current_mode == GameState.GameMode.CUSTOM and GameState.selected_level_path != "":
 		load_level(GameState.selected_level_path)
 	elif GameState.current_mode == GameState.GameMode.RANDOM:
 		generate_random_grid()
 	else:
+		# 預設保險：隨機生成
 		generate_random_grid()
 	
 	# 初始化玩家位置

@@ -20,8 +20,16 @@ const PROGRESS_FILE = "user://challenge_progress.json"
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
 var last_camera_distance: float = 9.0
 var current_steps: int = 0
-var version_number: String = "v1.0.14"
+var version_number: String = "v1.0.15"
 var author_name: String = "Paddyliu"
+
+func reset_level_state() -> void:
+	print("[GameState] 重設關卡狀態")
+	preview_level_data = {}
+	selected_level_path = ""
+	current_challenge_id = -1
+	is_preview_mode = false
+	current_steps = 0
 
 func _ready() -> void:
 	print("--- GameState 初始化 ---")
@@ -58,7 +66,10 @@ func load_progress() -> void:
 		if json.parse(json_text) == OK:
 			var data = json.get_data()
 			if data.has("cleared"):
-				cleared_challenges = Array(data["cleared"])
+				# 強制轉為 int 陣列，避免 JSON 解析出的 float 導致比對失敗
+				cleared_challenges = []
+				for val in data["cleared"]:
+					cleared_challenges.append(int(val))
 				print("[GameState] 載入成功，已過關關卡:", cleared_challenges)
 		else:
 			print("[GameState] 解析進度失敗:", json.get_error_message())

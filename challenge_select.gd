@@ -15,7 +15,10 @@ var current_page: int = 0
 const ITEMS_PER_PAGE: int = 10
 
 func _ready() -> void:
-	$BackButton.pressed.connect(func(): get_tree().change_scene_to_file("res://menu.tscn"))
+	$BackButton.pressed.connect(func(): 
+		GameState.reset_level_state()
+		get_tree().change_scene_to_file("res://menu.tscn")
+	)
 	
 	# 強制更新最新進度
 	GameState.load_progress()
@@ -90,11 +93,17 @@ func _create_level_button(display_name: String, level_id: int, download_url: Str
 	btn.custom_minimum_size = Vector2(0, 100)
 	btn.add_theme_font_size_override("font_size", 32)
 	
+	# 增加除錯訊息，確認 ID 是否匹配
+	# print("[DEBUG] LEVEL ID:", level_id, " 是否在清單中:", (level_id in GameState.cleared_challenges))
+	
 	if level_id in GameState.cleared_challenges:
 		var style = StyleBoxFlat.new()
-		style.bg_color = Color(0.2, 0.6, 0.2, 0.8)
+		style.bg_color = Color(0.2, 0.6, 0.2, 0.8) # 綠色
 		btn.add_theme_stylebox_override("normal", style)
-	
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+		btn.add_theme_stylebox_override("focus", style)
+		
 	btn.pressed.connect(func(): _on_level_pressed(download_url, level_id))
 	list_container.add_child(btn)
 
