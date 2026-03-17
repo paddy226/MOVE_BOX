@@ -25,7 +25,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.16"
+var version_number: String = "v1.0.17"
 var author_name: String = "Paddyliu"
 
 func get_data_hash(data: Dictionary) -> String:

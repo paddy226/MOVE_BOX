@@ -1,12 +1,68 @@
 {
-  "metadata": { "level_name": "Challenge Level 11", "author": "Paddyliu" },
-  "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 4, "z": 4} },
-  "tiles": [
-    { "pos": {"x": -4, "z": -4}, "type": "GOAL", "color": "#0000FF", "value": 3 },
-    { "pos": {"x": 0, "z": 4}, "type": "COLOR_CHANGER", "color": "#FFFF00", "value": 0, "uses": -1 },
-    { "pos": {"x": 4, "z": 0}, "type": "COLOR_CHANGER", "color": "#0000FF", "value": 0, "uses": -1 },
-    { "pos": {"x": -2, "z": -2}, "type": "OBSTACLE" },
-    { "pos": {"x": -3, "z": -2}, "type": "OBSTACLE" },
-    { "pos": {"x": -2, "z": -3}, "type": "OBSTACLE" }
-  ]
+	"metadata": {
+		"author": "Paddyliu",
+		"current_file": "level_11",
+		"date": "2026-03-17T22:03:35",
+		"level_name": "level_11"
+	},
+	"settings": {
+		"grid_height": 10,
+		"grid_width": 10,
+		"start_pos": {
+			"x": 4,
+			"z": 4
+		}
+	},
+	"tiles": [
+		{
+			"color": "0000ffff",
+			"pos": {
+				"x": -4,
+				"z": -4
+			},
+			"type": "GOAL",
+			"uses": -1,
+			"value": 3
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -3,
+				"z": -2
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -2,
+				"z": -3
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -2,
+				"z": -2
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "0000ffff",
+			"pos": {
+				"x": 4,
+				"z": 0
+			},
+			"type": "COLOR_CHANGER",
+			"uses": -1,
+			"value": 0
+		}
+	]
 }

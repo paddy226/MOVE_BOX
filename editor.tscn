@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://editor.gd" id="1_editor_script"]
 [ext_resource type="Script" path="res://level.gd" id="2_level_script"]
@@ -13,7 +13,9 @@
 [ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/stop.png" id="11_wall_icon"]
 [ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/cross.png" id="12_hole_icon"]
 [ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/return.png" id="13_changer_icon"]
-[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/singleplayer.png" id="14_start_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/share2.png" id="14_share_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/singleplayer.png" id="15_start_icon"]
+[ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/smaller.png" id="16_import_icon"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_Ghost"]
 size = Vector3(1, 1, 1)
@@ -135,6 +137,22 @@ ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(0.4, 1, 0.4, 0.8)
 
+[node name="ImportButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+tooltip_text = "Import Level JSON from Clipboard"
+texture_normal = ExtResource("16_import_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(0, 1, 1, 0.8)
+[node name="ShareButton" type="TextureButton" parent="CanvasLayer/HUD/Toolbar"]custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+tooltip_text = "Copy Level JSON to Clipboard"
+texture_normal = ExtResource("14_share_icon")
+ignore_texture_size = true
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.8)
+
 [node name="ToolPalette" type="VBoxContainer" parent="CanvasLayer/HUD"]
 layout_mode = 1
 anchors_preset = 4
@@ -191,7 +209,7 @@ modulate = Color(1, 1, 1, 0.6)
 [node name="Btn_Start" type="TextureButton" parent="CanvasLayer/HUD/ToolPalette"]
 custom_minimum_size = Vector2(80, 80)
 layout_mode = 2
-texture_normal = ExtResource("14_start_icon")
+texture_normal = ExtResource("15_start_icon")
 ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(1, 1, 1, 0.6)

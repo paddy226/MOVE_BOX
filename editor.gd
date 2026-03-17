@@ -71,6 +71,10 @@ func _ready() -> void:
 	toolbar.get_node("SaveButton").pressed.connect(_on_save_pressed)
 	toolbar.get_node("LoadButton").pressed.connect(_on_load_pressed)
 	toolbar.get_node("PlayButton").pressed.connect(play_level)
+	if toolbar.has_node("ImportButton"):
+		toolbar.get_node("ImportButton").pressed.connect(_on_import_pressed)
+	if toolbar.has_node("ShareButton"):
+		toolbar.get_node("ShareButton").pressed.connect(_on_share_pressed)
 	toolbar.get_node("ClearButton").pressed.connect(_on_clear_pressed)
 	
 	# 彈窗按鈕
@@ -236,6 +240,25 @@ func _on_popup_value_selected(val: int) -> void:
 		editing_tile._update_visuals()
 		AudioManager.play("ui_click")
 		_autosave()
+
+func _on_share_pressed() -> void:
+	var err = _validate_level()
+	if err != "":
+		alert_label.text = err
+		alert_popup.get_node("VBoxContainer/Title").text = "INVALID LEVEL"
+		alert_popup.visible = true
+		AudioManager.play("error")
+		return
+		
+	var level_data = _get_current_level_data("Shared Level")
+	var json_string = JSON.stringify(level_data)
+	
+	DisplayServer.clipboard_set(json_string)
+	
+	alert_label.text = "Level data copied to clipboard!\nYou can now paste it to share with others."
+	alert_popup.get_node("VBoxContainer/Title").text = "SHARE SUCCESS"
+	alert_popup.visible = true
+	AudioManager.play("ui_click")
 
 func _on_save_pressed() -> void:
 	var err = _validate_level()
@@ -403,3 +426,34 @@ func _get_color_name(c: Color) -> String:
 	if c == Color.RED: return "Red"; if c == Color.GREEN: return "Green"; if c == Color.BLUE: return "Blue"
 	if c == Color.YELLOW: return "Yellow"; if c == Color.PURPLE: return "Purple"; if c == Color.DARK_GREEN: return "Dark Green"
 	return "White"
+
+func _on_import_pressed() -> void:
+	var clipboard = DisplayServer.clipboard_get().strip_edges()
+	if clipboard == "":
+		_show_alert("Clipboard is empty!", "IMPORT ERROR")
+		return
+		
+	var json = JSON.new()
+	var error = json.parse(clipboard)
+	if error != OK:
+		_show_alert("Invalid level data in clipboard!\nMake sure you copied the full JSON.", "IMPORT ERROR")
+		return
+		
+	var data = json.get_data()
+	# 基本結構驗證
+	if not data is Dictionary or not data.has("tiles") or not data.has("settings"):
+		_show_alert("Incompatible level data format!", "IMPORT ERROR")
+		return
+		
+	level.generate_from_data(data)
+	current_editing_file_name = "Imported_" + str(Time.get_unix_time_from_system()).substr(-4)
+	_make_all_tiles_editable()
+	_update_ghost_pos()
+	_autosave()
+	_show_alert("Level imported successfully from clipboard!", "IMPORT SUCCESS")
+	AudioManager.play("goal")
+
+func _show_alert(msg: String, title: String = "ALERT") -> void:
+	alert_label.text = msg
+	alert_popup.get_node("VBoxContainer/Title").text = title
+	alert_popup.visible = true
