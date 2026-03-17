@@ -8,6 +8,7 @@ var selected_level_path: String = ""
 var preview_level_data: Dictionary = {}
 var is_preview_mode: bool = false
 var current_challenge_id: int = -1
+var challenge_page: int = 0 # 記錄挑戰模式當前分頁
 
 const GITHUB_USER = "paddy226"
 const GITHUB_REPO = "MOVE_BOX"
@@ -25,7 +26,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.17"
+var version_number: String = "v1.0.18"
 var author_name: String = "Paddyliu"
 
 func get_data_hash(data: Dictionary) -> String:

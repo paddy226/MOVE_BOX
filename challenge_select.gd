@@ -11,12 +11,12 @@ extends Control
 @onready var page_label = $Pagination/PageLabel
 
 var all_challenge_files = []
-var current_page: int = 0
 const ITEMS_PER_PAGE: int = 10
 
 func _ready() -> void:
 	$BackButton.pressed.connect(func(): 
 		GameState.reset_level_state()
+		GameState.challenge_page = 0
 		get_tree().change_scene_to_file("res://menu.tscn")
 	)
 	
@@ -73,15 +73,15 @@ func _display_levels() -> void:
 	if total_pages == 0: total_pages = 1
 	
 	# 邊界修正
-	current_page = clamp(current_page, 0, total_pages - 1)
+	GameState.challenge_page = clamp(GameState.challenge_page, 0, total_pages - 1)
 	
 	# 更新 UI 狀態
-	page_label.text = str(current_page + 1) + " / " + str(total_pages)
-	prev_btn.disabled = (current_page == 0)
-	next_btn.disabled = (current_page >= total_pages - 1)
+	page_label.text = str(GameState.challenge_page + 1) + " / " + str(total_pages)
+	prev_btn.disabled = (GameState.challenge_page == 0)
+	next_btn.disabled = (GameState.challenge_page >= total_pages - 1)
 	
 	# 計算本頁範圍
-	var start_idx = current_page * ITEMS_PER_PAGE
+	var start_idx = GameState.challenge_page * ITEMS_PER_PAGE
 	var end_idx = min(start_idx + ITEMS_PER_PAGE, total_items)
 	
 	for i in range(start_idx, end_idx):
@@ -134,12 +134,12 @@ func _start_challenge(url: String) -> void:
 
 func _on_prev_pressed() -> void:
 	AudioManager.play("ui_click")
-	current_page -= 1
+	GameState.challenge_page -= 1
 	_display_levels()
 
 func _on_next_pressed() -> void:
 	AudioManager.play("ui_click")
-	current_page += 1
+	GameState.challenge_page += 1
 	_display_levels()
 
 func _extract_number(s: String) -> int:
