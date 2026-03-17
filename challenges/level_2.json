@@ -4,6 +4,7 @@
   "tiles": [
     { "pos": {"x": 0, "z": 0}, "type": "OBSTACLE" },
     { "pos": {"x": 0, "z": 1}, "type": "OBSTACLE" },
-    { "pos": {"x": 2, "z": 2}, "type": "GOAL", "color": "#FFFFFF", "value": 1 }
+    { "pos": {"x": 2, "z": 2}, "type": "GOAL", "color": "#00FF00", "value": 1 },
+    { "pos": {"x": 0, "z": -2}, "type": "COLOR_CHANGER", "color": "#00FF00" }
   ]
 }

@@ -2,7 +2,7 @@
   "metadata": { "level_name": "Challenge Level 7", "author": "Paddyliu" },
   "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 0, "z": 0} },
   "tiles": [
-    { "pos": {"x": 4, "z": 4}, "type": "GOAL", "color": "#FFFF00", "value": 8 },
+    { "pos": {"x": 4, "z": 4}, "type": "GOAL", "color": "#FFFF00", "value": 5 },
     { "pos": {"x": -4, "z": -4}, "type": "COLOR_CHANGER", "color": "#FFFF00", "value": 0, "uses": -1 },
     { "pos": {"x": 2, "z": 0}, "type": "OBSTACLE" },
     { "pos": {"x": -2, "z": 0}, "type": "OBSTACLE" },

@@ -76,6 +76,10 @@ func load_level(file_path: String) -> void:
 
 # 根據解析後的資料生成地圖
 func generate_from_data(data: Dictionary) -> void:
+	# 只有在尚未設定 SHA 時才計算 (例如自定義本地關卡)
+	if GameState.current_level_sha == "":
+		GameState.current_level_sha = GameState.get_data_hash(data)
+	
 	# 1. 清除舊地圖
 	for child in get_children():
 		child.queue_free()

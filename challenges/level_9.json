@@ -2,8 +2,8 @@
   "metadata": { "level_name": "Challenge Level 9", "author": "Paddyliu" },
   "settings": { "grid_width": 10, "grid_height": 10, "start_pos": {"x": 0, "z": 0} },
   "tiles": [
-    { "pos": {"x": 0, "z": 4}, "type": "GOAL", "color": "#FFFFFF", "value": 10 },
-    { "pos": {"x": 0, "z": -4}, "type": "COLOR_CHANGER", "color": "#FFFFFF", "value": 0, "uses": -1 },
+    { "pos": {"x": 0, "z": 4}, "type": "GOAL", "color": "#006400", "value": 6 },
+    { "pos": {"x": 0, "z": -4}, "type": "COLOR_CHANGER", "color": "#006400", "value": 0, "uses": -1 },
     { "pos": {"x": 1, "z": 0}, "type": "OBSTACLE" },
     { "pos": {"x": -1, "z": 0}, "type": "OBSTACLE" },
     { "pos": {"x": 1, "z": 2}, "type": "OBSTACLE" },

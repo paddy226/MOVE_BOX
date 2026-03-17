@@ -1,7 +1,7 @@
 extends Control
 # challenge_select.gd - 支援分頁功能 (每頁 10 個) 的雲端關卡選擇
 
-@onready var list_container = $ScrollContainer/VBoxContainer
+@onready var list_container = $ScrollContainer/GridContainer
 @onready var http_request = $HTTPRequest
 @onready var status_label = $StatusLabel
 
@@ -52,9 +52,11 @@ func _on_request_completed(_result: int, response_code: int, _headers: PackedStr
 		
 	# 過濾掉非 JSON 檔案並排序
 	all_challenge_files = []
+	GameState.github_shas.clear() # 重刷快取
 	for f in data:
 		if f.name.ends_with(".json"):
 			all_challenge_files.append(f)
+			GameState.github_shas[f.name] = f.get("sha", "")
 			
 	all_challenge_files.sort_custom(func(a, b): 
 		return _extract_number(a.name) < _extract_number(b.name)
@@ -85,18 +87,21 @@ func _display_levels() -> void:
 	for i in range(start_idx, end_idx):
 		var file_info = all_challenge_files[i]
 		var level_id = _extract_number(file_info.name)
-		_create_level_button(file_info.name, level_id, file_info.download_url)
+		var content_sha = file_info.get("sha", "")
+		_create_level_button(file_info.name, level_id, file_info.download_url, content_sha)
 
-func _create_level_button(display_name: String, level_id: int, download_url: String) -> void:
+func _create_level_button(display_name: String, level_id: int, download_url: String, remote_sha: String) -> void:
 	var btn = Button.new()
 	btn.text = "LEVEL " + str(level_id)
-	btn.custom_minimum_size = Vector2(0, 100)
+	btn.custom_minimum_size = Vector2(300, 100)
 	btn.add_theme_font_size_override("font_size", 32)
 	
-	# 增加除錯訊息，確認 ID 是否匹配
-	# print("[DEBUG] LEVEL ID:", level_id, " 是否在清單中:", (level_id in GameState.cleared_challenges))
+	# 比對 Hash 邏輯
+	var id_key = str(level_id)
+	var local_hash = GameState.cleared_challenges.get(id_key, "")
+	var is_cleared = (local_hash != "" and local_hash == remote_sha)
 	
-	if level_id in GameState.cleared_challenges:
+	if is_cleared:
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.2, 0.6, 0.2, 0.8) # 綠色
 		btn.add_theme_stylebox_override("normal", style)
@@ -104,13 +109,14 @@ func _create_level_button(display_name: String, level_id: int, download_url: Str
 		btn.add_theme_stylebox_override("pressed", style)
 		btn.add_theme_stylebox_override("focus", style)
 		
-	btn.pressed.connect(func(): _on_level_pressed(download_url, level_id))
+	btn.pressed.connect(func(): _on_level_pressed(download_url, level_id, remote_sha))
 	list_container.add_child(btn)
 
-func _on_level_pressed(url: String, level_id: int) -> void:
+func _on_level_pressed(url: String, level_id: int, sha: String) -> void:
 	AudioManager.play("ui_click")
 	GameState.current_mode = GameState.GameMode.CHALLENGE
 	GameState.current_challenge_id = level_id
+	GameState.current_level_sha = sha # 暫存 SHA
 	_start_challenge(url)
 
 func _start_challenge(url: String) -> void:

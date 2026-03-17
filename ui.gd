@@ -31,7 +31,8 @@ func _on_level_cleared() -> void:
 	
 	# 只有在挑戰模式下顯示 NEXT 按鈕
 	if GameState.current_mode == GameState.GameMode.CHALLENGE:
-		GameState.save_progress(GameState.current_challenge_id)
+		# 儲存 ID 與當前的內容 Hash
+		GameState.save_progress(GameState.current_challenge_id, GameState.current_level_sha)
 		next_btn.visible = true
 	else:
 		next_btn.visible = false
@@ -55,7 +56,12 @@ func _download_and_start_next(url: String, new_id: int) -> void:
 			if json.parse(body.get_string_from_utf8()) == OK:
 				GameState.current_challenge_id = new_id
 				GameState.preview_level_data = json.get_data()
-				print("[UI] 下一關載入成功，準備重啟場景")
+				
+				# 從快取更新目前的 SHA
+				var file_name = "level_" + str(new_id) + ".json"
+				GameState.current_level_sha = GameState.github_shas.get(file_name, "")
+				
+				print("[UI] 下一關載入成功，準備重啟場景. Hash:", GameState.current_level_sha)
 				get_tree().reload_current_scene()
 		else:
 			print("[UI] 找不到下一關或連線失敗。網址: ", url)
