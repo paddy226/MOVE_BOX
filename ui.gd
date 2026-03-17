@@ -111,6 +111,7 @@ func _setup_back_button() -> void:
 
 func _on_back_button_pressed() -> void:
 	AudioManager.play("ui_click")
+	GameState.save_total_steps() # 儲存總步數
 	if GameState.is_preview_mode: get_tree().change_scene_to_file("res://editor.tscn")
 	elif GameState.current_mode == GameState.GameMode.CHALLENGE: get_tree().change_scene_to_file("res://challenge_select.tscn")
 	elif GameState.current_mode == GameState.GameMode.CUSTOM: get_tree().change_scene_to_file("res://level_select.tscn")

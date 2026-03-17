@@ -131,6 +131,7 @@ func roll_box(dir: Vector3) -> void:
 	AudioManager.play("roll")
 	
 	GameState.current_steps += 1
+	GameState.total_steps += 1 # 累加總步數
 	stepped.emit(GameState.current_steps)
 	
 	var pivot_pos: Vector3 = global_position + (dir * grid_size * 0.5) + (Vector3.DOWN * grid_size * 0.5)

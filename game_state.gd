@@ -16,6 +16,7 @@ const GITHUB_RAW_URL = "https://raw.githubusercontent.com/paddy226/MOVE_BOX/mast
 
 # { "level_id_string": "content_sha_hash" }
 var cleared_challenges: Dictionary = {} 
+var total_steps: int = 0
 const PROGRESS_FILE = "user://challenge_progress.json"
 
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
@@ -24,7 +25,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.15"
+var version_number: String = "v1.0.16"
 var author_name: String = "Paddyliu"
 
 func get_data_hash(data: Dictionary) -> String:
@@ -47,14 +48,22 @@ func _ready() -> void:
 func save_progress(level_id: int, content_sha: String) -> void:
 	var id_key = str(level_id)
 	cleared_challenges[id_key] = content_sha
-		
-	var data = {"cleared_dict": cleared_challenges}
+	_save_to_disk()
+	print("[GameState] 已過關:", level_id, " Hash:", content_sha)
+
+func save_total_steps() -> void:
+	_save_to_disk()
+
+func _save_to_disk() -> void:
+	var data = {
+		"cleared_dict": cleared_challenges,
+		"total_steps": total_steps
+	}
 	var file = FileAccess.open(PROGRESS_FILE, FileAccess.WRITE)
 	if file:
 		var json_string = JSON.stringify(data)
 		file.store_string(json_string)
 		file.close()
-		print("[GameState] 已過關:", level_id, " Hash:", content_sha)
 	else:
 		print("[GameState] 儲存失敗！無法寫入:", PROGRESS_FILE)
 
@@ -62,6 +71,7 @@ func load_progress() -> void:
 	if not FileAccess.file_exists(PROGRESS_FILE):
 		print("[GameState] 進度檔不存在:", PROGRESS_FILE)
 		cleared_challenges = {}
+		total_steps = 0
 		return
 		
 	var file = FileAccess.open(PROGRESS_FILE, FileAccess.READ)
@@ -72,13 +82,14 @@ func load_progress() -> void:
 		var json = JSON.new()
 		if json.parse(json_text) == OK:
 			var data = json.get_data()
+			# 讀取總步數
+			total_steps = int(data.get("total_steps", 0))
+			
 			# 支援舊版本轉移或新版本讀取
 			if data.has("cleared_dict"):
 				cleared_challenges = Dictionary(data["cleared_dict"])
-				print("[GameState] 載入字典進度成功")
+				print("[GameState] 載入字典進度成功，總步數:", total_steps)
 			elif data.has("cleared"):
-				# 舊版相容：如果是舊的陣列格式，我們先清空（因為沒有 Hash 無法驗證）
-				# 或者您可以選擇保留但給予空 Hash
 				cleared_challenges = {}
 				print("[GameState] 偵測到舊版進度，重置為 Hash 模式")
 		else:
