@@ -21,6 +21,7 @@ const MANIFEST_FILE = "user://challenges_manifest.json"
 # { "level_id_string": "content_sha_hash" }
 var cleared_challenges: Dictionary = {} 
 var total_steps: int = 0
+var last_played_challenge_id: int = -1 # 新增：記錄最後遊玩的挑戰關卡 ID
 const PROGRESS_FILE = "user://challenge_progress.json"
 
 # 本地關卡清單管理 { "filename": { "sha": "...", "id": 1, "name": "..." } }
@@ -32,7 +33,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.22"
+var version_number: String = "v1.0.23"
 var author_name: String = "Paddyliu"
 
 func update_challenge_page_by_id(level_id: int) -> void:
@@ -88,6 +89,7 @@ func load_manifest() -> void:
 func save_progress(level_id: int, content_sha: String) -> void:
 	var id_key = str(level_id)
 	cleared_challenges[id_key] = content_sha
+	last_played_challenge_id = level_id # 過關也視為最後遊玩
 	_save_to_disk()
 	print("[GameState] 已過關:", level_id, " Hash:", content_sha)
 
@@ -97,7 +99,8 @@ func save_total_steps() -> void:
 func _save_to_disk() -> void:
 	var data = {
 		"cleared_dict": cleared_challenges,
-		"total_steps": total_steps
+		"total_steps": total_steps,
+		"last_played_challenge_id": last_played_challenge_id
 	}
 	var file = FileAccess.open(PROGRESS_FILE, FileAccess.WRITE)
 	if file:
@@ -112,6 +115,7 @@ func load_progress() -> void:
 		print("[GameState] 進度檔不存在:", PROGRESS_FILE)
 		cleared_challenges = {}
 		total_steps = 0
+		last_played_challenge_id = -1
 		return
 		
 	var file = FileAccess.open(PROGRESS_FILE, FileAccess.READ)
@@ -122,13 +126,14 @@ func load_progress() -> void:
 		var json = JSON.new()
 		if json.parse(json_text) == OK:
 			var data = json.get_data()
-			# 讀取總步數
+			# 讀取總步數與最後遊玩 ID
 			total_steps = int(data.get("total_steps", 0))
+			last_played_challenge_id = int(data.get("last_played_challenge_id", -1))
 			
 			# 支援舊版本轉移或新版本讀取
 			if data.has("cleared_dict"):
 				cleared_challenges = Dictionary(data["cleared_dict"])
-				print("[GameState] 載入字典進度成功，總步數:", total_steps)
+				print("[GameState] 載入字典進度成功，總步數:", total_steps, " 最後遊玩 ID:", last_played_challenge_id)
 			elif data.has("cleared"):
 				cleared_challenges = {}
 				print("[GameState] 偵測到舊版進度，重置為 Hash 模式")

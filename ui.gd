@@ -52,6 +52,10 @@ func _on_next_button_pressed() -> void:
 			GameState.update_challenge_page_by_id(next_id) # 同步頁碼
 			GameState.preview_level_data = json.get_data()
 			
+			# 更新最後遊玩紀錄
+			GameState.last_played_challenge_id = next_id
+			GameState.save_total_steps()
+			
 			# 從 Manifest 取得 SHA
 			var manifest_info = GameState.local_manifest.get(file_name, {})
 			GameState.current_level_sha = manifest_info.get("sha", "")

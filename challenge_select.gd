@@ -158,6 +158,11 @@ func _process_download_queue() -> void:
 func _finalize_list_and_display() -> void:
 	is_syncing = false
 	status_label.text = "" # 清除同步狀態文字，避免重疊
+	
+	# 如果有最後遊玩紀錄，自動跳轉到該頁
+	if GameState.last_played_challenge_id != -1:
+		GameState.update_challenge_page_by_id(GameState.last_played_challenge_id)
+	
 	all_challenge_files.sort_custom(func(a, b): 
 		return _extract_number(a.name) < _extract_number(b.name)
 	)
@@ -192,12 +197,38 @@ func _create_level_button(file_info: Dictionary, level_id: int) -> void:
 	var id_key = str(level_id)
 	var local_hash = GameState.cleared_challenges.get(id_key, "")
 	var is_cleared = (local_hash != "" and local_hash == file_info.sha)
+	var is_last_played = (level_id == GameState.last_played_challenge_id)
 	
 	if is_cleared:
 		var style = StyleBoxFlat.new()
 		style.bg_color = Color(0.2, 0.6, 0.2, 0.8) 
 		btn.add_theme_stylebox_override("normal", style)
 		btn.add_theme_stylebox_override("hover", style)
+	
+	if is_last_played:
+		# 增加一個特殊的邊框
+		var style = btn.get_theme_stylebox("normal").duplicate() if btn.has_theme_stylebox_override("normal") else StyleBoxFlat.new()
+		if style is StyleBoxFlat:
+			style.border_width_left = 4
+			style.border_width_top = 4
+			style.border_width_right = 4
+			style.border_width_bottom = 4
+			style.border_color = Color(1.0, 0.8, 0.2, 1.0) # 金色邊框
+			btn.add_theme_stylebox_override("normal", style)
+		
+		# 加入單人玩家圖示替代文字
+		var icon = TextureRect.new()
+		icon.texture = load("res://assets/kenney_game-icons/PNG/White/2x/singleplayer.png")
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(80, 80) # 再放大尺寸
+		icon.modulate = Color(1.0, 0.8, 0.2, 0.7) # 金色，較高透明度以免擋住文字
+		btn.add_child(icon)
+		# 靠左上角對齊
+		icon.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_MINSIZE, 0)
+		icon.offset_left += 5 # 向右偏移
+		icon.offset_top += 5  # 向下偏移
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE # 避免擋住按鈕點擊
 		
 	if not file_info.is_local:
 		btn.disabled = true # 正在同步中或遺失且離線
@@ -212,6 +243,10 @@ func _on_level_pressed(file_info: Dictionary, level_id: int) -> void:
 	GameState.current_challenge_id = level_id
 	GameState.current_level_sha = file_info.sha
 	GameState.update_challenge_page_by_id(level_id)
+	
+	# 更新最後遊玩紀錄並存檔
+	GameState.last_played_challenge_id = level_id
+	GameState.save_total_steps() # 這會調用 _save_to_disk 存檔
 	
 	# 從本地讀取
 	var local_path = GameState.LOCAL_CHALLENGE_DIR + file_info.name
