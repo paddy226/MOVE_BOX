@@ -15,10 +15,16 @@ const GITHUB_REPO = "MOVE_BOX"
 const GITHUB_API_URL = "https://api.github.com/repos/paddy226/MOVE_BOX/contents/challenges"
 const GITHUB_RAW_URL = "https://raw.githubusercontent.com/paddy226/MOVE_BOX/master/challenges/"
 
+const LOCAL_CHALLENGE_DIR = "user://challenges/"
+const MANIFEST_FILE = "user://challenges_manifest.json"
+
 # { "level_id_string": "content_sha_hash" }
 var cleared_challenges: Dictionary = {} 
 var total_steps: int = 0
 const PROGRESS_FILE = "user://challenge_progress.json"
+
+# 本地關卡清單管理 { "filename": { "sha": "...", "id": 1, "name": "..." } }
+var local_manifest: Dictionary = {}
 
 var last_camera_rotation: Vector3 = Vector3(-PI/3, 0, 0)
 var last_camera_distance: float = 9.0
@@ -26,7 +32,7 @@ var current_steps: int = 0
 var current_level_sha: String = "" # 暫存目前關卡的 SHA
 var github_shas: Dictionary = {}   # 快取從 API 抓到的 { "level_1.json": "sha..." }
 
-var version_number: String = "v1.0.21"
+var version_number: String = "v1.0.22"
 var author_name: String = "Paddyliu"
 
 func update_challenge_page_by_id(level_id: int) -> void:
@@ -51,7 +57,33 @@ func reset_level_state() -> void:
 
 func _ready() -> void:
 	print("--- GameState 初始化 ---")
+	_ensure_local_dirs()
 	load_progress()
+	load_manifest()
+
+func _ensure_local_dirs() -> void:
+	if not DirAccess.dir_exists_absolute(LOCAL_CHALLENGE_DIR):
+		DirAccess.make_dir_recursive_absolute(LOCAL_CHALLENGE_DIR)
+		print("[GameState] 建立本地挑戰目錄:", LOCAL_CHALLENGE_DIR)
+
+func save_manifest() -> void:
+	var file = FileAccess.open(MANIFEST_FILE, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(local_manifest))
+		file.close()
+		print("[GameState] Manifest 已更新")
+
+func load_manifest() -> void:
+	if FileAccess.file_exists(MANIFEST_FILE):
+		var file = FileAccess.open(MANIFEST_FILE, FileAccess.READ)
+		var json = JSON.new()
+		if json.parse(file.get_as_text()) == OK:
+			local_manifest = Dictionary(json.get_data())
+			print("[GameState] 載入 Manifest 成功，共有 ", local_manifest.size(), " 個本地關卡")
+		file.close()
+	else:
+		local_manifest = {}
+		print("[GameState] Manifest 不存在，初始化為空")
 
 func save_progress(level_id: int, content_sha: String) -> void:
 	var id_key = str(level_id)

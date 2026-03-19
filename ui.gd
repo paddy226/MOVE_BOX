@@ -39,37 +39,29 @@ func _on_level_cleared() -> void:
 
 func _on_next_button_pressed() -> void:
 	AudioManager.play("ui_click")
-	# 挑戰模式下一關邏輯
+	# 挑戰模式下一關邏輯：優先從本地讀取
 	var next_id = GameState.current_challenge_id + 1
-	var next_url = GameState.GITHUB_RAW_URL + "level_" + str(next_id) + ".json"
+	var file_name = "level_" + str(next_id) + ".json"
+	var local_path = GameState.LOCAL_CHALLENGE_DIR + file_name
 	
-	_download_and_start_next(next_url, next_id)
-
-func _download_and_start_next(url: String, new_id: int) -> void:
-	print("[UI] 嘗試連線下一關: ", url)
-	var http = HTTPRequest.new()
-	add_child(http)
-	http.request_completed.connect(func(_res, code, _hdr, body):
-		print("[UI] GitHub 回應碼: ", code)
-		if code == 200:
-			var json = JSON.new()
-			if json.parse(body.get_string_from_utf8()) == OK:
-				GameState.current_challenge_id = new_id
-				GameState.update_challenge_page_by_id(new_id) # 同步頁碼
-				GameState.preview_level_data = json.get_data()
-				
-				# 從快取更新目前的 SHA
-				var file_name = "level_" + str(new_id) + ".json"
-				GameState.current_level_sha = GameState.github_shas.get(file_name, "")
-				
-				print("[UI] 下一關載入成功，準備重啟場景. Hash:", GameState.current_level_sha)
-				get_tree().reload_current_scene()
-		else:
-			print("[UI] 找不到下一關或連線失敗。網址: ", url)
-			get_tree().change_scene_to_file("res://challenge_select.tscn")
-		http.queue_free()
-	)
-	http.request(url)
+	if FileAccess.file_exists(local_path):
+		var file = FileAccess.open(local_path, FileAccess.READ)
+		var json = JSON.new()
+		if json.parse(file.get_as_text()) == OK:
+			GameState.current_challenge_id = next_id
+			GameState.update_challenge_page_by_id(next_id) # 同步頁碼
+			GameState.preview_level_data = json.get_data()
+			
+			# 從 Manifest 取得 SHA
+			var manifest_info = GameState.local_manifest.get(file_name, {})
+			GameState.current_level_sha = manifest_info.get("sha", "")
+			
+			print("[UI] 下一關載入成功 (Local). Hash:", GameState.current_level_sha)
+			get_tree().reload_current_scene()
+		file.close()
+	else:
+		print("[UI] 找不到本地下一關檔案，返回選單: ", file_name)
+		get_tree().change_scene_to_file("res://challenge_select.tscn")
 
 # --- 基礎 UI 設定 ---
 func _setup_version_label() -> void:
