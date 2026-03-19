@@ -33,6 +33,11 @@ var current_mode = EditMode.TILE
 var editing_tile: Tile = null
 var pending_delete_path: String = ""
 
+# 載入分頁相關
+var all_loadable_files = []
+var current_load_page: int = 0
+const LOAD_ITEMS_PER_PAGE: int = 10
+
 const AUTOSAVE_PATH = "user://editor_autosave.json"
 
 var tools = [
@@ -84,6 +89,18 @@ func _ready() -> void:
 	$CanvasLayer/SavePopup/VBoxContainer/HBoxContainer/ConfirmSave.pressed.connect(_on_confirm_save)
 	$CanvasLayer/SavePopup/VBoxContainer/HBoxContainer/CancelSave.pressed.connect(func(): save_popup.visible = false)
 	$CanvasLayer/LoadPopup/VBoxContainer/CloseLoad.pressed.connect(func(): load_popup.visible = false)
+	# 載入彈窗分頁按鈕
+	load_popup.get_node("VBoxContainer/Pagination/PrevBtn").pressed.connect(func():
+		AudioManager.play("ui_click")
+		current_load_page -= 1
+		_display_load_page()
+	)
+	load_popup.get_node("VBoxContainer/Pagination/NextBtn").pressed.connect(func():
+		AudioManager.play("ui_click")
+		current_load_page += 1
+		_display_load_page()
+	)
+	
 	$CanvasLayer/DeletePopup/VBoxContainer/HBox/ConfirmDel.pressed.connect(_on_confirm_delete)
 	$CanvasLayer/DeletePopup/VBoxContainer/HBox/CancelDel.pressed.connect(func(): del_popup.visible = false)
 	$CanvasLayer/AlertPopup/VBoxContainer/CloseAlert.pressed.connect(func(): alert_popup.visible = false)
@@ -275,48 +292,85 @@ func _on_load_pressed() -> void:
 	load_popup.visible = true
 
 func _refresh_load_list() -> void:
-	for child in load_list.get_children(): child.queue_free()
+	all_loadable_files = []
 	var can_delete_res = (OS.get_name() != "Android")
-	_add_levels_to_load_list("res://levels/", can_delete_res)
+	_collect_loadable_from_dir("res://levels/", can_delete_res)
 	var user_path = OS.get_user_data_dir() + "/levels/" if OS.get_name() == "Android" else "user://levels/"
-	_add_levels_to_load_list(user_path, true)
+	_collect_loadable_from_dir(user_path, true)
 	
-func _add_levels_to_load_list(path: String, can_delete: bool) -> void:
+	# 排序
+	all_loadable_files.sort_custom(func(a, b): return a.path.get_file().to_lower() < b.path.get_file().to_lower())
+	
+	current_load_page = 0
+	_display_load_page()
+
+func _collect_loadable_from_dir(path: String, can_delete: bool) -> void:
 	if not DirAccess.dir_exists_absolute(path): return
 	var dir = DirAccess.open(path)
 	dir.list_dir_begin()
 	var fn = dir.get_next()
-	var levels = []
 	while fn != "":
-		if not dir.current_is_dir() and fn.ends_with(".json"): levels.append(path + fn)
+		if not dir.current_is_dir() and fn.ends_with(".json"):
+			all_loadable_files.append({"path": path + fn, "can_delete": can_delete})
 		fn = dir.get_next()
-	levels.sort_custom(func(a, b): return a.get_file().to_lower() < b.get_file().to_lower())
-	for full_path in levels:
-		var hbox = HBoxContainer.new()
-		hbox.custom_minimum_size = Vector2(0, 100)
-		var btn = Button.new()
-		btn.text = full_path.get_file().get_basename()
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 32)
-		btn.pressed.connect(func(): _load_level_to_editor(full_path))
-		hbox.add_child(btn)
-		if can_delete:
-			var del = Button.new()
-			del.text = " X "
-			del.custom_minimum_size = Vector2(100, 0)
-			del.add_theme_font_size_override("font_size", 32)
-			del.add_theme_color_override("font_color", Color.RED)
-			del.pressed.connect(func(): _on_delete_requested(full_path))
-			hbox.add_child(del)
-		load_list.add_child(hbox)
+
+func _display_load_page() -> void:
+	for child in load_list.get_children(): child.queue_free()
+	
+	var total_items = all_loadable_files.size()
+	var total_pages = int(ceil(float(total_items) / LOAD_ITEMS_PER_PAGE))
+	if total_pages == 0: total_pages = 1
+	
+	current_load_page = clamp(current_load_page, 0, total_pages - 1)
+	
+	# 更新 UI 標籤與按鈕
+	var pagination = load_popup.get_node("VBoxContainer/Pagination")
+	pagination.get_node("PageLabel").text = str(current_load_page + 1) + " / " + str(total_pages)
+	pagination.get_node("PrevBtn").disabled = (current_load_page == 0)
+	pagination.get_node("NextBtn").disabled = (current_load_page >= total_pages - 1)
+	
+	var start_idx = current_load_page * LOAD_ITEMS_PER_PAGE
+	var end_idx = min(start_idx + LOAD_ITEMS_PER_PAGE, total_items)
+	
+	for i in range(start_idx, end_idx):
+		var file_info = all_loadable_files[i]
+		_create_load_cell(file_info.path, file_info.can_delete)
+
+func _create_load_cell(file_path: String, can_delete: bool) -> void:
+	var container = Control.new()
+	container.custom_minimum_size = Vector2(280, 90)
+	
+	var btn = Button.new()
+	btn.text = file_path.get_file().get_basename()
+	btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	btn.add_theme_font_size_override("font_size", 24)
+	btn.pressed.connect(func(): _load_level_to_editor(file_path))
+	container.add_child(btn)
+	
+	if can_delete:
+		var del = Button.new()
+		del.text = "X"
+		del.custom_minimum_size = Vector2(45, 45)
+		del.add_theme_color_override("font_color", Color.RED)
+		del.pressed.connect(func(): _on_delete_requested(file_path))
+		container.add_child(del)
+		del.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 2)
+		
+	load_list.add_child(container)
 
 func _on_delete_requested(path: String) -> void:
-	AudioManager.play("ui_click"); pending_delete_path = path; del_label.text = path.get_file().get_basename(); del_popup.visible = true
+	AudioManager.play("ui_click")
+	pending_delete_path = path
+	del_label.text = path.get_file().get_basename()
+	del_popup.visible = true
 
 func _on_confirm_delete() -> void:
 	var path = pending_delete_path
-	if FileAccess.file_exists(path): DirAccess.remove_absolute(path); AudioManager.play("error")
-	del_popup.visible = false; _refresh_load_list()
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+		AudioManager.play("error")
+	del_popup.visible = false
+	_refresh_load_list()
 
 func _load_level_to_editor(path: String) -> void:
 	AudioManager.play("ui_click"); current_editing_file_name = path.get_file().get_basename()

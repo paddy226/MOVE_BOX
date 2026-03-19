@@ -229,23 +229,6 @@ ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(1, 1, 1, 0.6)
 
-[node name="HelpLabel" type="Label" parent="CanvasLayer/HUD"]
-visible = false
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -400.0
-offset_top = 110.0
-offset_right = -20.0
-offset_bottom = 310.0
-grow_horizontal = 0
-theme_override_font_sizes/font_size = 24
-text = "Tab: Cycle Tools
-WASD / Drag: Move
-Click: Edit / Settings"
-horizontal_alignment = 2
-
 [node name="PropertyPopup" type="Panel" parent="CanvasLayer"]
 visible = false
 anchors_preset = 8
@@ -380,9 +363,9 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -320.0
+offset_left = -350.0
 offset_top = -450.0
-offset_right = 320.0
+offset_right = 350.0
 offset_bottom = 450.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -410,10 +393,36 @@ horizontal_alignment = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="List" type="VBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer"]
+[node name="List" type="GridContainer" parent="CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 15
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
+
+[node name="Pagination" type="HBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="PrevBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
+custom_minimum_size = Vector2(120, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "PREV"
+
+[node name="PageLabel" type="Label" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "1 / 1"
+horizontal_alignment = 1
+
+[node name="NextBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
+custom_minimum_size = Vector2(120, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "NEXT"
 
 [node name="CloseLoad" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer"]
 custom_minimum_size = Vector2(0, 80)
@@ -459,7 +468,7 @@ horizontal_alignment = 1
 [node name="LevelName" type="Label" parent="CanvasLayer/DeletePopup/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 36
 text = "Name"
 horizontal_alignment = 1
 

@@ -1,0 +1,138 @@
+{
+	"metadata": {
+		"author": "Paddyliu",
+		"current_file": "s5",
+		"date": "2026-03-19T21:57:23",
+		"level_name": "s5"
+	},
+	"settings": {
+		"grid_height": 10,
+		"grid_width": 10,
+		"start_pos": {
+			"x": 0,
+			"z": 3
+		}
+	},
+	"tiles": [
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -5,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ff0000ff",
+			"pos": {
+				"x": -4,
+				"z": -4
+			},
+			"type": "COLOR_CHANGER",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -4,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ff0000ff",
+			"pos": {
+				"x": -4,
+				"z": 3
+			},
+			"type": "GOAL",
+			"uses": -1,
+			"value": 3
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -3,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": -2,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": 1,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": 2,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "a020f0ff",
+			"pos": {
+				"x": 3,
+				"z": -4
+			},
+			"type": "COLOR_CHANGER",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": 3,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		},
+		{
+			"color": "a020f0ff",
+			"pos": {
+				"x": 3,
+				"z": 3
+			},
+			"type": "GOAL",
+			"uses": -1,
+			"value": 1
+		},
+		{
+			"color": "ffffffff",
+			"pos": {
+				"x": 4,
+				"z": 0
+			},
+			"type": "OBSTACLE",
+			"uses": -1,
+			"value": 0
+		}
+	]
+}

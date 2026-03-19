@@ -10,11 +10,13 @@ extends Control
 @onready var next_btn = $Pagination/NextBtn
 @onready var page_label = $Pagination/PageLabel
 
-var all_challenge_files = [] # 統一存放 { "name": "...", "sha": "...", "download_url": "...", "local": bool }
+var all_challenge_files = [] # 統一存放 { "name": "...", "sha": "...", "download_url": "...", "is_local": bool }
 const ITEMS_PER_PAGE: int = 10
 
-var download_queue = []
-var is_syncing = false
+var priority_queue = [] # 當前頁面優先下載
+var background_queue = [] # 其他頁面背景下載
+var is_syncing_priority = false
+var is_syncing_background = false
 
 func _ready() -> void:
 	$BackButton.pressed.connect(func(): 
@@ -26,6 +28,10 @@ func _ready() -> void:
 	# 強制更新最新進度
 	GameState.load_progress()
 	GameState.load_manifest()
+	
+	# 如果有最後遊玩紀錄，先同步頁碼，確保優先隊列正確
+	if GameState.last_played_challenge_id != -1:
+		GameState.update_challenge_page_by_id(GameState.last_played_challenge_id)
 	
 	prev_btn.pressed.connect(_on_prev_pressed)
 	next_btn.pressed.connect(_on_next_pressed)
@@ -74,9 +80,18 @@ func _on_list_request_completed(_result: int, response_code: int, _headers: Pack
 
 func _sync_with_remote(remote_data: Array) -> void:
 	all_challenge_files = []
-	download_queue = []
+	priority_queue = []
+	background_queue = []
+	
+	# 先排序遠端資料，確保能正確計算分頁
+	remote_data.sort_custom(func(a, b): return _extract_number(a.name) < _extract_number(b.name))
+	
+	# 計算當前分頁範圍
+	var start_idx = GameState.challenge_page * ITEMS_PER_PAGE
+	var end_idx = start_idx + ITEMS_PER_PAGE
 	
 	var remote_filenames = []
+	var idx = 0
 	for f in remote_data:
 		if f.name.ends_with(".json"):
 			remote_filenames.append(f.name)
@@ -91,81 +106,99 @@ func _sync_with_remote(remote_data: Array) -> void:
 				"is_local": false
 			}
 			
-			# 檢查是否需要下載 (本地不存在或 SHA 不同)
+			# 檢查是否需要下載
 			var local_path = GameState.LOCAL_CHALLENGE_DIR + f.name
 			if local_sha != remote_sha or not FileAccess.file_exists(local_path):
-				download_queue.append(file_item)
+				# 判斷是否屬於當前分頁
+				if idx >= start_idx and idx < end_idx:
+					priority_queue.append(file_item)
+				else:
+					background_queue.append(file_item)
 			else:
 				file_item.is_local = true
 				
 			all_challenge_files.append(file_item)
+			idx += 1
 
-	# 移除本地多餘檔案 (不在遠端清單中的)
+	# 移除本地多餘檔案
 	var to_remove = []
 	for local_f in GameState.local_manifest.keys():
-		if not local_f in remote_filenames:
-			to_remove.append(local_f)
-	
+		if not local_f in remote_filenames: to_remove.append(local_f)
 	for r in to_remove:
 		var p = GameState.LOCAL_CHALLENGE_DIR + r
-		if FileAccess.file_exists(p):
-			DirAccess.remove_absolute(p)
-			print("[Sync] 刪除本地過時檔案: ", r)
+		if FileAccess.file_exists(p): DirAccess.remove_absolute(p)
 		GameState.local_manifest.erase(r)
-	
 	if to_remove.size() > 0: GameState.save_manifest()
 
-	if download_queue.size() > 0:
-		_process_download_queue()
+	if priority_queue.size() > 0:
+		_process_priority_queue()
 	else:
 		_finalize_list_and_display()
+		_process_background_queue()
 
-func _process_download_queue() -> void:
-	if download_queue.is_empty():
-		status_label.text = "Sync Complete!"
+func _process_priority_queue() -> void:
+	if priority_queue.is_empty():
 		GameState.save_manifest()
 		_finalize_list_and_display()
+		_process_background_queue() # 優先隊列完畢，開始背景下載
 		return
 		
-	is_syncing = true
-	var current_item = download_queue[0]
-	status_label.text = "Syncing... (" + str(all_challenge_files.size() - download_queue.size() + 1) + "/" + str(all_challenge_files.size()) + ")"
+	is_syncing_priority = true
+	var current_item = priority_queue[0]
+	status_label.text = "Syncing Page... (" + str(priority_queue.size()) + " left)"
 	
 	var downloader = HTTPRequest.new()
 	add_child(downloader)
 	downloader.request_completed.connect(func(_res, code, _hdr, body):
 		if code == 200:
-			var path = GameState.LOCAL_CHALLENGE_DIR + current_item.name
-			var file = FileAccess.open(path, FileAccess.WRITE)
-			if file:
-				file.store_string(body.get_string_from_utf8())
-				file.close()
-				# 更新 Manifest
-				GameState.local_manifest[current_item.name] = {
-					"sha": current_item.sha,
-					"download_url": current_item.download_url,
-					"id": _extract_number(current_item.name)
-				}
-				current_item.is_local = true
-				print("[Sync] 下載成功: ", current_item.name)
-		
+			_save_local_file(current_item.name, body.get_string_from_utf8(), current_item.sha, current_item.download_url)
+			current_item.is_local = true
 		downloader.queue_free()
-		download_queue.pop_front()
-		_process_download_queue()
+		priority_queue.pop_front()
+		_process_priority_queue()
 	)
 	downloader.request(current_item.download_url)
 
-func _finalize_list_and_display() -> void:
-	is_syncing = false
-	status_label.text = "" # 清除同步狀態文字，避免重疊
+func _process_background_queue() -> void:
+	if background_queue.is_empty():
+		is_syncing_background = false
+		GameState.save_manifest()
+		print("[Sync] 背景同步全部完成")
+		return
+		
+	is_syncing_background = true
+	var current_item = background_queue[0]
+	# 背景同步不更新 status_label，避免干擾玩家
 	
-	# 如果有最後遊玩紀錄，自動跳轉到該頁
-	if GameState.last_played_challenge_id != -1:
-		GameState.update_challenge_page_by_id(GameState.last_played_challenge_id)
-	
-	all_challenge_files.sort_custom(func(a, b): 
-		return _extract_number(a.name) < _extract_number(b.name)
+	var downloader = HTTPRequest.new()
+	add_child(downloader)
+	downloader.request_completed.connect(func(_res, code, _hdr, body):
+		if code == 200:
+			_save_local_file(current_item.name, body.get_string_from_utf8(), current_item.sha, current_item.download_url)
+			current_item.is_local = true
+			# 如果玩家剛好翻到這一頁，手動刷新一下按鈕狀態 (可選)
+		downloader.queue_free()
+		background_queue.pop_front()
+		_process_background_queue()
 	)
+	downloader.request(current_item.download_url)
+
+func _save_local_file(filename: String, content: String, sha: String, url: String) -> void:
+	var path = GameState.LOCAL_CHALLENGE_DIR + filename
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(content)
+		file.close()
+		GameState.local_manifest[filename] = {
+			"sha": sha,
+			"download_url": url,
+			"id": _extract_number(filename)
+		}
+
+func _finalize_list_and_display() -> void:
+	is_syncing_priority = false
+	status_label.text = "" 
+	# 注意：這裡不再次排序，因為 _sync_with_remote 已經排好了
 	_display_levels()
 
 func _display_levels() -> void:
@@ -193,6 +226,7 @@ func _create_level_button(file_info: Dictionary, level_id: int) -> void:
 	btn.text = "LEVEL " + str(level_id)
 	btn.custom_minimum_size = Vector2(300, 100)
 	btn.add_theme_font_size_override("font_size", 32)
+	btn.mouse_filter = Control.MOUSE_FILTER_PASS # 允許拖動事件穿透
 	
 	var id_key = str(level_id)
 	var local_hash = GameState.cleared_challenges.get(id_key, "")
