@@ -229,6 +229,15 @@ ignore_texture_size = true
 stretch_mode = 5
 modulate = Color(1, 1, 1, 0.6)
 
+[node name="Dimmer" type="ColorRect" parent="CanvasLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.4)
+
 [node name="PropertyPopup" type="Panel" parent="CanvasLayer"]
 visible = false
 anchors_preset = 8
@@ -364,9 +373,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -350.0
-offset_top = -450.0
+offset_top = -500.0
 offset_right = 350.0
-offset_bottom = 450.0
+offset_bottom = 500.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -389,40 +398,40 @@ theme_override_font_sizes/font_size = 36
 text = "LOAD LEVEL"
 horizontal_alignment = 1
 
+[node name="SearchBox" type="LineEdit" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+placeholder_text = "Search levels..."
+alignment = 1
+clear_button_enabled = true
+
+[node name="SortBar" type="HBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="SortNameBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/SortBar"]
+custom_minimum_size = Vector2(150, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "By Name"
+
+[node name="SortTimeBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/SortBar"]
+custom_minimum_size = Vector2(150, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "By Date"
+
 [node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/LoadPopup/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="List" type="GridContainer" parent="CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer"]
+[node name="List" type="VBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 20
-theme_override_constants/v_separation = 20
-columns = 2
-
-[node name="Pagination" type="HBoxContainer" parent="CanvasLayer/LoadPopup/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 30
-alignment = 1
-
-[node name="PrevBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
-custom_minimum_size = Vector2(120, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "PREV"
-
-[node name="PageLabel" type="Label" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
-custom_minimum_size = Vector2(120, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "1 / 1"
-horizontal_alignment = 1
-
-[node name="NextBtn" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer/Pagination"]
-custom_minimum_size = Vector2(120, 70)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "NEXT"
+theme_override_constants/separation = 15
 
 [node name="CloseLoad" type="Button" parent="CanvasLayer/LoadPopup/VBoxContainer"]
 custom_minimum_size = Vector2(0, 80)
@@ -484,6 +493,65 @@ theme_override_font_sizes/font_size = 32
 text = "YES"
 
 [node name="CancelDel" type="Button" parent="CanvasLayer/DeletePopup/VBoxContainer/HBox"]
+custom_minimum_size = Vector2(150, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "NO"
+
+[node name="ClearConfirmPopup" type="Panel" parent="CanvasLayer"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/ClearConfirmPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="Msg" type="Label" parent="CanvasLayer/ClearConfirmPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Clear Current Grid?"
+horizontal_alignment = 1
+
+[node name="SubMsg" type="Label" parent="CanvasLayer/ClearConfirmPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "This cannot be undone!"
+horizontal_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/ClearConfirmPopup/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 40
+alignment = 1
+
+[node name="ConfirmClear" type="Button" parent="CanvasLayer/ClearConfirmPopup/VBoxContainer/HBox"]
+custom_minimum_size = Vector2(150, 70)
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "YES"
+
+[node name="CancelClear" type="Button" parent="CanvasLayer/ClearConfirmPopup/VBoxContainer/HBox"]
 custom_minimum_size = Vector2(150, 70)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32

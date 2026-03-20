@@ -1,5 +1,5 @@
 extends Control
-# level_select.gd - 關卡選擇清單 (支援搜尋、排序與平滑捲動) - V2 正式版
+# level_select_v2.gd - 關卡選擇清單 (支援搜尋、排序與平滑捲動)
 
 @onready var scroll_container = $ScrollContainer
 @onready var list_container = $ScrollContainer/VBoxContainer
@@ -49,6 +49,7 @@ func _input(event: InputEvent) -> void:
 					last_mouse_pos = event.global_position
 					total_drag_distance = 0.0 # 重置拖曳距離
 			else:
+				# 放開滑鼠時延遲一小段時間才結束 dragging 狀態，或是在 selection 函式中檢查距離
 				is_dragging = false
 	
 	elif event is InputEventMouseMotion and is_dragging:
@@ -145,6 +146,7 @@ func _create_level_row(lvl: Dictionary) -> void:
 func _on_level_selected(path: String) -> void:
 	# 檢查是否為拖曳捲動
 	if total_drag_distance > DRAG_THRESHOLD:
+		print("[CustomV2] 偵測到大位移，取消點擊進入關卡 (Distance: ", total_drag_distance, ")")
 		total_drag_distance = 0.0 # 歸零
 		return
 		

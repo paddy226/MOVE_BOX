@@ -11,8 +11,10 @@ extends Node3D
 @onready var save_popup = $CanvasLayer/SavePopup
 @onready var load_popup = $CanvasLayer/LoadPopup
 @onready var del_popup = $CanvasLayer/DeletePopup
+@onready var clear_confirm_popup = $CanvasLayer/ClearConfirmPopup
 @onready var alert_popup = $CanvasLayer/AlertPopup
 @onready var alert_label = $CanvasLayer/AlertPopup/VBoxContainer/Msg
+@onready var dimmer = $CanvasLayer/Dimmer
 
 @onready var load_list = $CanvasLayer/LoadPopup/VBoxContainer/ScrollContainer/List
 @onready var file_name_edit = $CanvasLayer/SavePopup/VBoxContainer/FileNameEdit
@@ -33,10 +35,15 @@ var current_mode = EditMode.TILE
 var editing_tile: Tile = null
 var pending_delete_path: String = ""
 
-# 載入分頁相關
-var all_loadable_files = []
-var current_load_page: int = 0
-const LOAD_ITEMS_PER_PAGE: int = 10
+# 載入彈窗相關變數
+var all_loadable_files = [] # { "path": "...", "name": "...", "time": int, "can_delete": bool }
+var load_sort_mode = "time" # "name" or "time"
+
+# 載入列表拖曳捲動相關
+var load_is_dragging = false
+var load_last_mouse_pos = Vector2.ZERO
+var load_total_drag_distance = 0.0
+const LOAD_DRAG_THRESHOLD = 15.0
 
 const AUTOSAVE_PATH = "user://editor_autosave.json"
 
@@ -85,25 +92,49 @@ func _ready() -> void:
 		share_toolbar.get_node("ShareButton").pressed.connect(_on_share_pressed)
 	
 	# 彈窗按鈕
-	$CanvasLayer/PropertyPopup/VBoxContainer/CloseButton.pressed.connect(func(): prop_popup.visible = false)
+	$CanvasLayer/PropertyPopup/VBoxContainer/CloseButton.pressed.connect(func(): _toggle_popup(prop_popup, false))
 	$CanvasLayer/SavePopup/VBoxContainer/HBoxContainer/ConfirmSave.pressed.connect(_on_confirm_save)
-	$CanvasLayer/SavePopup/VBoxContainer/HBoxContainer/CancelSave.pressed.connect(func(): save_popup.visible = false)
-	$CanvasLayer/LoadPopup/VBoxContainer/CloseLoad.pressed.connect(func(): load_popup.visible = false)
-	# 載入彈窗分頁按鈕
-	load_popup.get_node("VBoxContainer/Pagination/PrevBtn").pressed.connect(func():
-		AudioManager.play("ui_click")
-		current_load_page -= 1
-		_display_load_page()
-	)
-	load_popup.get_node("VBoxContainer/Pagination/NextBtn").pressed.connect(func():
-		AudioManager.play("ui_click")
-		current_load_page += 1
-		_display_load_page()
-	)
+	$CanvasLayer/SavePopup/VBoxContainer/HBoxContainer/CancelSave.pressed.connect(func(): _toggle_popup(save_popup, false))
+	$CanvasLayer/LoadPopup/VBoxContainer/CloseLoad.pressed.connect(func(): _toggle_popup(load_popup, false))
+	
+	# 載入彈窗搜尋與排序
+	var load_vbox = load_popup.get_node("VBoxContainer")
+	load_vbox.get_node("SearchBox").text_changed.connect(func(_t): _display_load_list())
+	load_vbox.get_node("SortBar/SortNameBtn").pressed.connect(func(): _change_load_sort("name"))
+	load_vbox.get_node("SortBar/SortTimeBtn").pressed.connect(func(): _change_load_sort("time"))
 	
 	$CanvasLayer/DeletePopup/VBoxContainer/HBox/ConfirmDel.pressed.connect(_on_confirm_delete)
-	$CanvasLayer/DeletePopup/VBoxContainer/HBox/CancelDel.pressed.connect(func(): del_popup.visible = false)
-	$CanvasLayer/AlertPopup/VBoxContainer/CloseAlert.pressed.connect(func(): alert_popup.visible = false)
+	$CanvasLayer/DeletePopup/VBoxContainer/HBox/CancelDel.pressed.connect(func(): _toggle_popup(del_popup, false))
+	$CanvasLayer/ClearConfirmPopup/VBoxContainer/HBox/ConfirmClear.pressed.connect(_on_confirm_clear)
+	$CanvasLayer/ClearConfirmPopup/VBoxContainer/HBox/CancelClear.pressed.connect(func(): _toggle_popup(clear_confirm_popup, false))
+	$CanvasLayer/AlertPopup/VBoxContainer/CloseAlert.pressed.connect(func(): _toggle_popup(alert_popup, false))
+
+func _toggle_popup(popup: Control, is_visible: bool) -> void:
+	popup.visible = is_visible
+	# 只要有任何一個彈窗開著，遮罩就顯示
+	var any_visible = prop_popup.visible or save_popup.visible or load_popup.visible or del_popup.visible or alert_popup.visible
+	dimmer.visible = any_visible
+	if any_visible: dimmer.mouse_filter = Control.MOUSE_FILTER_STOP
+	else: dimmer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func _input(event: InputEvent) -> void:
+	# 處理載入列表的滑鼠拖曳捲動
+	if load_popup.visible:
+		var scroll = load_popup.get_node("VBoxContainer/ScrollContainer")
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				if event.pressed:
+					if scroll.get_global_rect().has_point(event.global_position):
+						load_is_dragging = true
+						load_last_mouse_pos = event.global_position
+						load_total_drag_distance = 0.0
+				else:
+					load_is_dragging = false
+		elif event is InputEventMouseMotion and load_is_dragging:
+			var delta = event.global_position.y - load_last_mouse_pos.y
+			scroll.scroll_vertical -= delta
+			load_total_drag_distance += abs(delta)
+			load_last_mouse_pos = event.global_position
 
 func _setup_palette_ui() -> void:
 	palette.get_node("Btn_Tile").pressed.connect(func(): _select_tool(0))
@@ -163,11 +194,16 @@ func _validate_level() -> String:
 
 func _on_clear_pressed() -> void:
 	AudioManager.play("ui_click")
+	_toggle_popup(clear_confirm_popup, true)
+
+func _on_confirm_clear() -> void:
 	level.generate_empty_grid()
 	current_editing_file_name = ""
 	_make_all_tiles_editable()
 	_update_ghost_pos()
-	_autosave() # 清除後也自動儲存狀態
+	_autosave() 
+	_toggle_popup(clear_confirm_popup, false)
+	AudioManager.play("goal")
 
 func _on_back_pressed() -> void:
 	_autosave() # 離開前自動儲存
@@ -242,7 +278,7 @@ func _on_tile_clicked(tile: Tile) -> void:
 
 func _open_property_popup(tile: Tile) -> void:
 	editing_tile = tile
-	prop_popup.visible = true
+	_toggle_popup(prop_popup, true)
 	$CanvasLayer/PropertyPopup/VBoxContainer/ValueSection.visible = (tile.type == Tile.TileType.GOAL)
 	AudioManager.play("ui_click")
 
@@ -263,9 +299,7 @@ func _on_popup_value_selected(val: int) -> void:
 func _on_share_pressed() -> void:
 	var err = _validate_level()
 	if err != "":
-		alert_label.text = err
-		alert_popup.get_node("VBoxContainer/Title").text = "INVALID LEVEL"
-		alert_popup.visible = true
+		_show_alert(err, "INVALID LEVEL")
 		AudioManager.play("error")
 		return
 		
@@ -274,107 +308,131 @@ func _on_share_pressed() -> void:
 	
 	DisplayServer.clipboard_set(json_string)
 	
-	alert_label.text = "Level data copied to clipboard!\nYou can now paste it to share with others."
-	alert_popup.get_node("VBoxContainer/Title").text = "SHARE SUCCESS"
-	alert_popup.visible = true
+	_show_alert("Level data copied to clipboard!\nYou can now paste it to share with others.", "SHARE SUCCESS")
 	AudioManager.play("ui_click")
 
 func _on_save_pressed() -> void:
 	var err = _validate_level()
-	if err != "": alert_label.text = err; alert_popup.visible = true; AudioManager.play("error"); return
+	if err != "": _show_alert(err); AudioManager.play("error"); return
 	AudioManager.play("ui_click")
 	file_name_edit.text = current_editing_file_name
-	save_popup.visible = true
+	_toggle_popup(save_popup, true)
 
 func _on_load_pressed() -> void:
 	AudioManager.play("ui_click")
 	_refresh_load_list()
-	load_popup.visible = true
+	_toggle_popup(load_popup, true)
 
 func _refresh_load_list() -> void:
 	all_loadable_files = []
 	var can_delete_res = (OS.get_name() != "Android")
-	_collect_loadable_from_dir("res://levels/", can_delete_res)
+	_collect_loadable_info("res://levels/", can_delete_res)
 	var user_path = OS.get_user_data_dir() + "/levels/" if OS.get_name() == "Android" else "user://levels/"
-	_collect_loadable_from_dir(user_path, true)
-	
-	# 排序
-	all_loadable_files.sort_custom(func(a, b): return a.path.get_file().to_lower() < b.path.get_file().to_lower())
-	
-	current_load_page = 0
-	_display_load_page()
+	_collect_loadable_info(user_path, true)
+	_display_load_list()
 
-func _collect_loadable_from_dir(path: String, can_delete: bool) -> void:
+func _collect_loadable_info(path: String, can_delete: bool) -> void:
 	if not DirAccess.dir_exists_absolute(path): return
 	var dir = DirAccess.open(path)
 	dir.list_dir_begin()
 	var fn = dir.get_next()
 	while fn != "":
 		if not dir.current_is_dir() and fn.ends_with(".json"):
-			all_loadable_files.append({"path": path + fn, "can_delete": can_delete})
+			var full_path = path + fn
+			all_loadable_files.append({
+				"path": full_path,
+				"name": fn.get_basename(),
+				"time": FileAccess.get_modified_time(full_path),
+				"can_delete": can_delete
+			})
 		fn = dir.get_next()
 
-func _display_load_page() -> void:
+func _change_load_sort(mode: String) -> void:
+	AudioManager.play("ui_click")
+	load_sort_mode = mode
+	_display_load_list()
+
+func _display_load_list() -> void:
 	for child in load_list.get_children(): child.queue_free()
 	
-	var total_items = all_loadable_files.size()
-	var total_pages = int(ceil(float(total_items) / LOAD_ITEMS_PER_PAGE))
-	if total_pages == 0: total_pages = 1
+	var search_text = load_popup.get_node("VBoxContainer/SearchBox").text.to_lower()
+	var filtered = []
+	for f in all_loadable_files:
+		if search_text == "" or search_text in f.name.to_lower():
+			filtered.append(f)
+			
+	if load_sort_mode == "name":
+		filtered.sort_custom(func(a, b): return a.name.to_lower() < b.name.to_lower())
+	else:
+		filtered.sort_custom(func(a, b): return a.time > b.time)
+		
+	# 更新按鈕視覺
+	var sort_bar = load_popup.get_node("VBoxContainer/SortBar")
+	sort_bar.get_node("SortNameBtn").modulate = Color.WHITE if load_sort_mode == "name" else Color(0.6, 0.6, 0.6)
+	sort_bar.get_node("SortTimeBtn").modulate = Color.WHITE if load_sort_mode == "time" else Color(0.6, 0.6, 0.6)
 	
-	current_load_page = clamp(current_load_page, 0, total_pages - 1)
-	
-	# 更新 UI 標籤與按鈕
-	var pagination = load_popup.get_node("VBoxContainer/Pagination")
-	pagination.get_node("PageLabel").text = str(current_load_page + 1) + " / " + str(total_pages)
-	pagination.get_node("PrevBtn").disabled = (current_load_page == 0)
-	pagination.get_node("NextBtn").disabled = (current_load_page >= total_pages - 1)
-	
-	var start_idx = current_load_page * LOAD_ITEMS_PER_PAGE
-	var end_idx = min(start_idx + LOAD_ITEMS_PER_PAGE, total_items)
-	
-	for i in range(start_idx, end_idx):
-		var file_info = all_loadable_files[i]
-		_create_load_cell(file_info.path, file_info.can_delete)
+	for f in filtered:
+		_create_load_row(f)
 
-func _create_load_cell(file_path: String, can_delete: bool) -> void:
-	var container = Control.new()
-	container.custom_minimum_size = Vector2(280, 90)
+func _create_load_row(f: Dictionary) -> void:
+	var hbox = HBoxContainer.new()
+	hbox.custom_minimum_size = Vector2(0, 100)
+	hbox.mouse_filter = Control.MOUSE_FILTER_PASS
 	
 	var btn = Button.new()
-	btn.text = file_path.get_file().get_basename()
-	btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	btn.add_theme_font_size_override("font_size", 24)
-	btn.pressed.connect(func(): _load_level_to_editor(file_path))
-	container.add_child(btn)
-	
-	if can_delete:
-		var del = Button.new()
-		del.text = "X"
-		del.custom_minimum_size = Vector2(45, 45)
-		del.add_theme_color_override("font_color", Color.RED)
-		del.pressed.connect(func(): _on_delete_requested(file_path))
-		container.add_child(del)
-		del.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_MINSIZE, 2)
+	btn.text = f.name
+	if load_sort_mode == "time":
+		var d = Time.get_datetime_dict_from_unix_time(f.time)
+		btn.text += " (%02d/%02d)" % [d.month, d.day]
 		
-	load_list.add_child(container)
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.add_theme_font_size_override("font_size", 32)
+	btn.mouse_filter = Control.MOUSE_FILTER_PASS
+	btn.pressed.connect(func(): _on_load_selected(f.path))
+	hbox.add_child(btn)
+	
+	if f.can_delete:
+		var del = Button.new()
+		del.text = " X "
+		del.custom_minimum_size = Vector2(100, 0)
+		del.add_theme_font_size_override("font_size", 32)
+		del.add_theme_color_override("font_color", Color.RED)
+		del.mouse_filter = Control.MOUSE_FILTER_PASS
+		del.pressed.connect(func(): _on_delete_requested(f.path))
+		hbox.add_child(del)
+		
+	load_list.add_child(hbox)
+
+func _on_load_selected(path: String) -> void:
+	if load_total_drag_distance > LOAD_DRAG_THRESHOLD:
+		load_total_drag_distance = 0.0
+		return
+		
+	AudioManager.play("ui_click")
+	current_editing_file_name = path.get_file().get_basename()
+	level.load_level(path)
+	call_deferred("_make_all_tiles_editable")
+	call_deferred("_update_ghost_pos")
+	_toggle_popup(load_popup, false)
+	_autosave()
 
 func _on_delete_requested(path: String) -> void:
 	AudioManager.play("ui_click")
 	pending_delete_path = path
 	del_label.text = path.get_file().get_basename()
-	del_popup.visible = true
+	_toggle_popup(del_popup, true)
 
 func _on_confirm_delete() -> void:
 	var path = pending_delete_path
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 		AudioManager.play("error")
-	del_popup.visible = false
+	_toggle_popup(del_popup, false)
 	_refresh_load_list()
 
 func _load_level_to_editor(path: String) -> void:
 	AudioManager.play("ui_click"); current_editing_file_name = path.get_file().get_basename()
-	level.load_level(path); call_deferred("_make_all_tiles_editable"); call_deferred("_update_ghost_pos"); load_popup.visible = false
+	level.load_level(path); call_deferred("_make_all_tiles_editable"); call_deferred("_update_ghost_pos"); _toggle_popup(load_popup, false)
 	_autosave()
 
 func _get_current_level_data(custom_name: String = "My Level") -> Dictionary:
@@ -423,13 +481,13 @@ func _on_confirm_save() -> void:
 	if not DirAccess.dir_exists_absolute(dir_path): DirAccess.make_dir_recursive_absolute(dir_path)
 	var file_path = dir_path + file_name + ".json"
 	var file = FileAccess.open(file_path, FileAccess.WRITE)
-	if file: file.store_string(JSON.stringify(level_data, "\t")); AudioManager.play("goal"); save_popup.visible = false
+	if file: file.store_string(JSON.stringify(level_data, "\t")); AudioManager.play("goal"); _toggle_popup(save_popup, false)
 	else: AudioManager.play("error")
 	_autosave()
 
 func play_level() -> void:
 	var err = _validate_level()
-	if err != "": alert_label.text = err; alert_popup.visible = true; AudioManager.play("error"); return
+	if err != "": _show_alert(err); AudioManager.play("error"); return
 	_autosave() # 預覽前先存檔
 	GameState.preview_level_data = _get_current_level_data("Preview")
 	GameState.current_mode = GameState.GameMode.CUSTOM; GameState.selected_level_path = ""; GameState.is_preview_mode = true
@@ -517,4 +575,4 @@ func _on_import_pressed() -> void:
 func _show_alert(msg: String, title: String = "ALERT") -> void:
 	alert_label.text = msg
 	alert_popup.get_node("VBoxContainer/Title").text = title
-	alert_popup.visible = true
+	_toggle_popup(alert_popup, true)

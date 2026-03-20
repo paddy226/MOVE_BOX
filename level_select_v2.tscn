@@ -1,16 +1,16 @@
 [gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" path="res://level_select.gd" id="1_select_script"]
+[ext_resource type="Script" path="res://level_select_v2.gd" id="1_select_script_v2"]
 [ext_resource type="Texture2D" path="res://assets/kenney_game-icons/PNG/White/2x/arrowLeft.png" id="2_back_icon"]
 
-[node name="LevelSelect" type="Control"]
+[node name="LevelSelectV2" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_select_script")
+script = ExtResource("1_select_script_v2")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -32,7 +32,7 @@ offset_right = 250.0
 offset_bottom = 120.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 48
-text = "CUSTOM LEVELS"
+text = "CUSTOM LEVELS V2"
 horizontal_alignment = 1
 
 [node name="SearchBox" type="LineEdit" parent="."]
