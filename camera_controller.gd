@@ -48,6 +48,12 @@ func _process(delta: float) -> void:
 		global_position = global_position.lerp(player.global_position, follow_speed * delta)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# 如果滑鼠點擊或滾動時正懸停在 UI 上，則不處理鏡頭控制
+	if event is InputEventMouseButton or event is InputEventMouseMotion:
+		# 檢查滑鼠是否在任何 UI 元素上
+		if get_viewport().gui_get_focus_owner() != null or _is_mouse_over_ui():
+			return
+
 	# 鏡頭旋轉 (Q/E 鍵 - 轉動 45 度)
 	if not is_rotating and event is InputEventKey and event.pressed:
 		var rot_dir = 0.0
@@ -102,6 +108,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			
 		if changed:
 			GameState.last_camera_distance = cam.position.z
+
+func _is_mouse_over_ui() -> bool:
+	# 取得目前滑鼠懸停的 UI 節點
+	var hovered = get_viewport().gui_get_hovered_control()
+	return hovered != null
 
 func _rotate_camera_step(angle_delta: float) -> void:
 	is_rotating = true
